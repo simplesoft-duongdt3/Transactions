@@ -1,6 +1,7 @@
 package com.tinyapps.transactions.ui
 
 import androidx.compose.Composable
+import androidx.compose.MutableState
 import androidx.ui.foundation.isSystemInDarkTheme
 import androidx.ui.material.MaterialTheme
 import androidx.ui.material.darkColorPalette
@@ -28,8 +29,8 @@ private val LightColorPalette = lightColorPalette(
 )
 
 @Composable
-fun TransactionsTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable() () -> Unit) {
-    val colors = if (darkTheme) {
+fun TransactionsTheme(darkTheme: MutableState<Boolean>, content: @Composable() () -> Unit) {
+    val colors = if (darkTheme.value) {
         DarkColorPalette
     } else {
         LightColorPalette
