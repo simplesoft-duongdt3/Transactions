@@ -5,11 +5,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.Composable
 import androidx.compose.state
 import androidx.ui.core.Alignment
+import androidx.ui.core.ContextAmbient
 import androidx.ui.core.Modifier
 import androidx.ui.core.setContent
-import androidx.ui.foundation.HorizontalScroller
-import androidx.ui.foundation.Text
-import androidx.ui.foundation.VerticalScroller
+import androidx.ui.foundation.*
 import androidx.ui.foundation.shape.corner.RoundedCornerShape
 import androidx.ui.graphics.Color
 import androidx.ui.layout.*
@@ -64,7 +63,8 @@ fun HeaderComponent(enableDarkMode: Boolean, onCheckChanged: (Boolean) -> Unit) 
         // Row is a composable that places its children in a horizontal sequence. You
         // can think of it similar to a LinearLayout with the horizontal orientation.
         Row(
-            modifier = Modifier.padding(16.dp), verticalGravity = Alignment.CenterVertically
+            modifier = Modifier.padding(16.dp), verticalGravity = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             // A pre-defined composable that's capable of rendering a switch. It honors the Material
             // Design specification.
@@ -81,13 +81,21 @@ fun HeaderComponent(enableDarkMode: Boolean, onCheckChanged: (Boolean) -> Unit) 
 @Composable
 fun WalletsComponent(wallets: List<Wallet>) {
     HorizontalScroller(modifier = Modifier.fillMaxWidth()) {
+        val context = ContextAmbient.current
+        val resources = context.resources
+        val displayMetrics = resources.displayMetrics
+        // Compute the screen width using the actual display width and the density of the display.
+        val screenWidth = displayMetrics.widthPixels / displayMetrics.density
+        val spacing = 16.dp
         Row {
             for ((index, wallet) in wallets.withIndex()) {
                 Card(
                     shape = RoundedCornerShape(4.dp),
-                    modifier = Modifier.width(320.dp).height(150.dp).padding(16.dp)
+                    modifier = Modifier.fillMaxWidth().height(150.dp).padding(16.dp)
                 ) {
                     Column(
+                        modifier = Modifier.preferredWidth(screenWidth.dp - (spacing * 2)),
+
                         horizontalGravity = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
@@ -106,6 +114,7 @@ fun WalletsComponent(wallets: List<Wallet>) {
                             )
                         )
                     }
+
                 }
             }
         }
@@ -122,13 +131,14 @@ fun TransactionsComponent(transactions: List<Transaction>) {
             for ((index, transaction) in transactions.withIndex()) {
                 val isProfit = transaction.amount > 0
                 Card(
+                    color = MaterialTheme.colors.background,
                     shape = RoundedCornerShape(4.dp),
                     modifier = Modifier.fillMaxWidth().height(120.dp).padding(8.dp)
                 ) {
-                    Row (verticalGravity = Alignment.CenterVertically)  {
+                    Row(verticalGravity = Alignment.CenterVertically) {
 
                         Divider(
-                            modifier = Modifier.width(4.dp).height(100.dp),
+                            modifier = Modifier.width(4.dp).fillMaxHeight(),
                             color = if (isProfit) Color.Green else Color.Red
                         )
 
@@ -219,6 +229,6 @@ fun FilterComponent() {
 fun DefaultPreview() {
     val enableDarkMode = state { false }
     TransactionsTheme(darkTheme = enableDarkMode) {
-        FilterComponent()
+        WalletsComponent(listOf(Wallet("Account X", 93993)))
     }
 }

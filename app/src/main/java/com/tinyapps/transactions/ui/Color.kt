@@ -5,6 +5,7 @@ import androidx.ui.graphics.Color
 val purple200 = Color(0xFFBB86FC)
 val purple500 = Color(0xFF6200EE)
 val purple700 = Color(0xFF3700B3)
+val gray = Color(0xB3E5E5E5)
 val teal200 = Color(0xFF03DAC5)
 
 val colors = listOf(
