@@ -1,0 +1,6 @@
+rootProject.name = "Transactions"
+include ':app'
+include ':domain'
+include ':data'
+include ':common_jvm'
+include ':presentation'
