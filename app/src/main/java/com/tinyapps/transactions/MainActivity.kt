@@ -8,19 +8,16 @@ import androidx.ui.core.Alignment
 import androidx.ui.core.ContextAmbient
 import androidx.ui.core.Modifier
 import androidx.ui.core.setContent
-import androidx.ui.foundation.HorizontalScroller
-import androidx.ui.foundation.Text
-import androidx.ui.foundation.VerticalScroller
-import androidx.ui.foundation.drawBackground
+import androidx.ui.foundation.*
+import androidx.ui.foundation.shape.corner.CircleShape
 import androidx.ui.foundation.shape.corner.RoundedCornerShape
 import androidx.ui.graphics.Color
 import androidx.ui.graphics.HorizontalGradient
 import androidx.ui.graphics.TileMode
 import androidx.ui.layout.*
-import androidx.ui.material.Card
-import androidx.ui.material.Divider
-import androidx.ui.material.MaterialTheme
-import androidx.ui.material.Switch
+import androidx.ui.material.*
+import androidx.ui.material.icons.Icons
+import androidx.ui.material.icons.filled.Add
 import androidx.ui.text.TextStyle
 import androidx.ui.text.font.FontWeight
 import androidx.ui.tooling.preview.Preview
@@ -35,56 +32,88 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val enableDarkMode = state { false }
-            TransactionsTheme(enableDarkMode) {
-                Column {
-                    val onCheckChanged = { _: Boolean ->
-                        enableDarkMode.value = !enableDarkMode.value
+            Scaffold(
+                floatingActionButton = {
+                    FloatingActionButton(
+                        onClick = {
+
+                        },
+                        backgroundColor = filter,
+                        contentColor = Color.White
+                    ) {
+                        Icon(asset = Icons.Filled.Add)
                     }
-                    HeaderComponent(
-                        enableDarkMode = enableDarkMode.value,
-                        onCheckChanged = onCheckChanged
-                    )
-                    WalletsComponent(listOf(Wallet("Account X", 93993)))
-                    TransactionsComponent(
-                        listOf(
-                            Transaction("SELL GU", 323, 12321421, "End Of Trend Up")
-                            , Transaction("BUY UCAD", 151, 12321421, "Block Trend DOWN")
-                            , Transaction("SELL EF", -131, 12321421, "End Trend Up")
-                            , Transaction("BUY EN", -152, 12321421, "Block Trend DOWN")
-                        )
-                    )
+                },
+                bodyContent = {
+                    val enableDarkMode = state { false }
+                    TransactionsTheme(enableDarkMode) {
+                        Column {
+                            val onCheckChanged = { _: Boolean ->
+                                enableDarkMode.value = !enableDarkMode.value
+                            }
+                            HeaderComponent(
+                                enableDarkMode = enableDarkMode.value,
+                                onCheckChanged = onCheckChanged
+                            )
+                            WalletsComponent(
+                                listOf(
+                                    Wallet("Account X", 93993),
+                                    Wallet("Account Y", 33443),
+                                    Wallet("Account Z", 43993)
+                                )
+                            )
+                            TransactionsComponent(
+                                listOf(
+                                    Transaction("SELL GU", 323, 12321421, "End Of Trend Up")
+                                    , Transaction("BUY UCAD", 151, 12321421, "Block Trend DOWN")
+                                    , Transaction("BUY UCAD", -151, 12321421, "Block Trend DOWN")
+                                    , Transaction("BUY UCAD", 151, 12321421, "Block Trend DOWN")
+                                    , Transaction("BUY UCAD", -151, 12321421, "Block Trend DOWN")
+                                    , Transaction("BUY UCAD", 151, 12321421, "Block Trend DOWN")
+                                    , Transaction("SELL EF", -131, 12321421, "End Trend Up")
+                                    , Transaction("SELL EF", 131, 12321421, "End Trend Up")
+                                    , Transaction("SELL EF", 131, 12321421, "End Trend Up")
+                                    , Transaction("SELL EF", -131, 12321421, "End Trend Up")
+                                    , Transaction("SELL EF", 131, 12321421, "End Trend Up")
+                                    , Transaction("SELL EF", -131, 12321421, "End Trend Up")
+                                    , Transaction("BUY EN", -152, 12321421, "Block Trend DOWN")
+                                )
+                            )
+                        }
+
+
+                    }
                 }
-            }
+            )
+
         }
     }
 }
 
 @Composable
 fun HeaderComponent(enableDarkMode: Boolean, onCheckChanged: (Boolean) -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colors.surface
+    Row(
+        modifier = Modifier.padding(16.dp).fillMaxWidth(),
+        verticalGravity = Alignment.CenterVertically
     ) {
-        // Row is a composable that places its children in a horizontal sequence. You
-        // can think of it similar to a LinearLayout with the horizontal orientation.
+        // A pre-defined composable that's capable of rendering a switch. It honors the Material
+        // Design specification.
         Row(
-            modifier = Modifier.padding(16.dp), verticalGravity = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth().weight(1f).padding(start = 32.dp),
+            horizontalArrangement = Arrangement.Center
         ) {
-            // A pre-defined composable that's capable of rendering a switch. It honors the Material
-            // Design specification.
-            Row(modifier = Modifier.fillMaxWidth().weight(1f).padding(start = 32.dp),
-                horizontalArrangement = Arrangement.Center) {
-                Text(
-                    text = "Accounts",
+            Text(
+                text = "Accounts",
+                style = TextStyle(
+                    fontSize = 20.sp,
                     color = titleText,
-                    style = MaterialTheme.typography.h5.copy(color = MaterialTheme.colors.onSurface),
-                    modifier = Modifier.padding(start = 8.dp)
-                )
-            }
-
-            Switch(checked = enableDarkMode, onCheckedChange = onCheckChanged)
+                    fontWeight = FontWeight.W700
+                ),
+                modifier = Modifier.padding(start = 8.dp)
+            )
         }
+
+        Switch(checked = enableDarkMode, onCheckedChange = onCheckChanged)
     }
 }
 
@@ -101,7 +130,7 @@ fun WalletsComponent(wallets: List<Wallet>) {
             for ((index, wallet) in wallets.withIndex()) {
                 Card(
                     shape = RoundedCornerShape(4.dp),
-                    color = account,
+                    color = accountBackground,
                     modifier = Modifier.fillMaxWidth().height(150.dp).padding(16.dp)
                 ) {
                     Column(
@@ -154,8 +183,10 @@ fun TransactionsComponent(transactions: List<Transaction>) {
                     elevation = 0.dp,
                     modifier = Modifier.fillMaxWidth().height(120.dp).padding(8.dp)
                 ) {
-                    Row(verticalGravity = Alignment.CenterVertically,
-                    modifier = Modifier.drawBackground(gradientBrush)) {
+                    Row(
+                        verticalGravity = Alignment.CenterVertically,
+                        modifier = Modifier.drawBackground(gradientBrush)
+                    ) {
 
                         Divider(
                             modifier = Modifier.width(4.dp).fillMaxHeight(),
@@ -189,7 +220,7 @@ fun TransactionsComponent(transactions: List<Transaction>) {
                             modifier = Modifier.weight(0.3f),
                             style = TextStyle(
                                 fontSize = 18.sp,
-                                color = if (isProfit)  textPositive else textNegative,
+                                color = if (isProfit) textPositive else textNegative,
                                 fontWeight = FontWeight.W400
                             )
                         )
@@ -232,19 +263,38 @@ fun DateComponent(date: Long) {
 @Composable
 fun FilterComponent() {
     Row(
-        modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement
-            .SpaceBetween
+        modifier = Modifier.fillMaxWidth().height(40.dp).padding(start = 16.dp, end = 16.dp),
+        verticalGravity = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            "Transaction history", style = TextStyle(
-                fontWeight = FontWeight.W300, fontSize = 16.sp,color = textPrimary
+            text = "Transaction history", style = TextStyle(
+                fontWeight = FontWeight.W300, fontSize = 16.sp, color = textPrimary
             )
         )
-        Text(
-            "Filter", style = TextStyle(
-                fontWeight = FontWeight.W100, fontSize = 14.sp,color = textSecondary
+        Row(verticalGravity = Alignment.CenterVertically) {
+            Text(
+                modifier = Modifier.padding(end = 4.dp),
+                text = "Filter", style = TextStyle(
+                    fontWeight = FontWeight.W100, fontSize = 14.sp, color = textSecondary
+                )
             )
-        )
+            FilterCircle(countFilter = 5)
+        }
+
+    }
+}
+
+@Composable
+fun FilterCircle(countFilter: Int) {
+    Box(
+        modifier = Modifier.width(20.dp).height(20.dp).clickable(onClick = {
+        }),
+        shape = CircleShape,
+        backgroundColor = filter,
+        gravity = ContentGravity.Center
+    ) {
+        Text(text = "$countFilter", style = TextStyle(color = Color.White, fontSize = 12.sp))
     }
 }
 
