@@ -8,9 +8,14 @@ import androidx.ui.core.Alignment
 import androidx.ui.core.ContextAmbient
 import androidx.ui.core.Modifier
 import androidx.ui.core.setContent
-import androidx.ui.foundation.*
+import androidx.ui.foundation.HorizontalScroller
+import androidx.ui.foundation.Text
+import androidx.ui.foundation.VerticalScroller
+import androidx.ui.foundation.drawBackground
 import androidx.ui.foundation.shape.corner.RoundedCornerShape
 import androidx.ui.graphics.Color
+import androidx.ui.graphics.HorizontalGradient
+import androidx.ui.graphics.TileMode
 import androidx.ui.layout.*
 import androidx.ui.material.Card
 import androidx.ui.material.Divider
@@ -21,9 +26,10 @@ import androidx.ui.text.font.FontWeight
 import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.dp
 import androidx.ui.unit.sp
+import com.tinyapps.common_jvm.extension.number.format
 import com.tinyapps.transactions.model.Transaction
 import com.tinyapps.transactions.model.Wallet
-import com.tinyapps.transactions.ui.TransactionsTheme
+import com.tinyapps.transactions.ui.*
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,16 +69,20 @@ fun HeaderComponent(enableDarkMode: Boolean, onCheckChanged: (Boolean) -> Unit) 
         // Row is a composable that places its children in a horizontal sequence. You
         // can think of it similar to a LinearLayout with the horizontal orientation.
         Row(
-            modifier = Modifier.padding(16.dp), verticalGravity = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.padding(16.dp), verticalGravity = Alignment.CenterVertically
         ) {
             // A pre-defined composable that's capable of rendering a switch. It honors the Material
             // Design specification.
-            Text(
-                text = "Accounts",
-                style = MaterialTheme.typography.h5.copy(color = MaterialTheme.colors.onSurface),
-                modifier = Modifier.padding(start = 8.dp)
-            )
+            Row(modifier = Modifier.fillMaxWidth().weight(1f).padding(start = 32.dp),
+                horizontalArrangement = Arrangement.Center) {
+                Text(
+                    text = "Accounts",
+                    color = titleText,
+                    style = MaterialTheme.typography.h5.copy(color = MaterialTheme.colors.onSurface),
+                    modifier = Modifier.padding(start = 8.dp)
+                )
+            }
+
             Switch(checked = enableDarkMode, onCheckedChange = onCheckChanged)
         }
     }
@@ -91,6 +101,7 @@ fun WalletsComponent(wallets: List<Wallet>) {
             for ((index, wallet) in wallets.withIndex()) {
                 Card(
                     shape = RoundedCornerShape(4.dp),
+                    color = account,
                     modifier = Modifier.fillMaxWidth().height(150.dp).padding(16.dp)
                 ) {
                     Column(
@@ -103,13 +114,15 @@ fun WalletsComponent(wallets: List<Wallet>) {
                             wallet.name,
                             style = TextStyle(
                                 fontSize = 20.sp,
-                                fontWeight = FontWeight.W100
+                                color = textSecondary,
+                                fontWeight = FontWeight.W300
                             )
                         )
                         Text(
-                            "${wallet.balance}$",
+                            "${wallet.balance.format()}$",
                             style = TextStyle(
                                 fontSize = 30.sp,
+                                color = textPrimary,
                                 fontWeight = FontWeight.W700
                             )
                         )
@@ -127,19 +140,26 @@ fun TransactionsComponent(transactions: List<Transaction>) {
         Column {
 
             FilterComponent()
-
+            val gradientBrush = HorizontalGradient(
+                colors = listOf(gradientStart, gradientEnd),
+                startX = 0f,
+                endX = 900f,
+                tileMode = TileMode.Clamp
+            )
             for ((index, transaction) in transactions.withIndex()) {
                 val isProfit = transaction.amount > 0
+
                 Card(
-                    color = MaterialTheme.colors.background,
                     shape = RoundedCornerShape(4.dp),
+                    elevation = 0.dp,
                     modifier = Modifier.fillMaxWidth().height(120.dp).padding(8.dp)
                 ) {
-                    Row(verticalGravity = Alignment.CenterVertically) {
+                    Row(verticalGravity = Alignment.CenterVertically,
+                    modifier = Modifier.drawBackground(gradientBrush)) {
 
                         Divider(
                             modifier = Modifier.width(4.dp).fillMaxHeight(),
-                            color = if (isProfit) Color.Green else Color.Red
+                            color = if (isProfit) positive else negative
                         )
 
                         DateComponent(date = transaction.date)
@@ -149,6 +169,7 @@ fun TransactionsComponent(transactions: List<Transaction>) {
                                 transaction.name,
                                 style = TextStyle(
                                     fontSize = 16.sp,
+                                    color = textPrimary,
                                     fontWeight = FontWeight.W700
                                 )
                             )
@@ -156,6 +177,7 @@ fun TransactionsComponent(transactions: List<Transaction>) {
                                 transaction.comment,
                                 style = TextStyle(
                                     fontSize = 14.sp,
+                                    color = textSecondary,
                                     fontWeight = FontWeight.W100
                                 )
                             )
@@ -163,12 +185,12 @@ fun TransactionsComponent(transactions: List<Transaction>) {
 
 
                         Text(
-                            "${(if (isProfit) "+" else "")} ${transaction.amount}$",
+                            "${(if (isProfit) "+" else "")}${transaction.amount.format()}$",
                             modifier = Modifier.weight(0.3f),
                             style = TextStyle(
                                 fontSize = 18.sp,
-                                color = if (isProfit) Color.Green else Color.Red,
-                                fontWeight = FontWeight.W300
+                                color = if (isProfit)  textPositive else textNegative,
+                                fontWeight = FontWeight.W400
                             )
                         )
                     }
@@ -191,6 +213,7 @@ fun DateComponent(date: Long) {
                 "12",
                 style = TextStyle(
                     fontSize = 18.sp,
+                    color = textPrimary,
                     fontWeight = FontWeight.W700
                 )
             )
@@ -198,6 +221,7 @@ fun DateComponent(date: Long) {
                 "May",
                 style = TextStyle(
                     fontSize = 16.sp,
+                    color = textSecondary,
                     fontWeight = FontWeight.W200
                 )
             )
@@ -213,12 +237,12 @@ fun FilterComponent() {
     ) {
         Text(
             "Transaction history", style = TextStyle(
-                fontWeight = FontWeight.W200, fontSize = 16.sp
+                fontWeight = FontWeight.W300, fontSize = 16.sp,color = textPrimary
             )
         )
         Text(
             "Filter", style = TextStyle(
-                fontWeight = FontWeight.W100, fontSize = 14.sp
+                fontWeight = FontWeight.W100, fontSize = 14.sp,color = textSecondary
             )
         )
     }
@@ -228,7 +252,24 @@ fun FilterComponent() {
 @Composable
 fun DefaultPreview() {
     val enableDarkMode = state { false }
-    TransactionsTheme(darkTheme = enableDarkMode) {
-        WalletsComponent(listOf(Wallet("Account X", 93993)))
+    TransactionsTheme(enableDarkMode) {
+        Column {
+            val onCheckChanged = { _: Boolean ->
+                enableDarkMode.value = !enableDarkMode.value
+            }
+            HeaderComponent(
+                enableDarkMode = enableDarkMode.value,
+                onCheckChanged = onCheckChanged
+            )
+            WalletsComponent(listOf(Wallet("Account X", 93993)))
+            TransactionsComponent(
+                listOf(
+                    Transaction("SELL GU", 323, 12321421, "End Of Trend Up")
+                    , Transaction("BUY UCAD", 151, 12321421, "Block Trend DOWN")
+                    , Transaction("SELL EF", -131, 12321421, "End Trend Up")
+                    , Transaction("BUY EN", -152, 12321421, "Block Trend DOWN")
+                )
+            )
+        }
     }
 }
