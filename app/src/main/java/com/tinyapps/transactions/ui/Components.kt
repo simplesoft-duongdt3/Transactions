@@ -1,29 +1,36 @@
 package com.tinyapps.transactions.ui
 
 import android.util.Log
-import androidx.compose.Composable
-import androidx.compose.getValue
-import androidx.compose.setValue
-import androidx.compose.state
+import androidx.compose.*
 import androidx.ui.core.Alignment
 import androidx.ui.core.ContextAmbient
 import androidx.ui.core.Modifier
 import androidx.ui.foundation.*
+import androidx.ui.foundation.selection.ToggleableState
 import androidx.ui.foundation.shape.corner.CircleShape
 import androidx.ui.foundation.shape.corner.RoundedCornerShape
 import androidx.ui.graphics.Color
 import androidx.ui.graphics.HorizontalGradient
+import androidx.ui.graphics.ImageAsset
 import androidx.ui.graphics.TileMode
+import androidx.ui.graphics.vector.VectorAsset
 import androidx.ui.layout.*
+import androidx.ui.layout.RowScope.weight
 import androidx.ui.material.*
 import androidx.ui.text.TextStyle
 import androidx.ui.text.font.FontWeight
+import androidx.ui.unit.TextUnit
 import androidx.ui.unit.dp
 import androidx.ui.unit.sp
 import com.tinyapps.common_jvm.extension.number.format
 import com.tinyapps.transactions.model.Transaction
 import com.tinyapps.transactions.model.Wallet
 import com.tinyapps.transactions.ui.state.AppState
+import androidx.ui.material.icons.Icons
+import androidx.ui.material.icons.filled.Close
+import androidx.ui.text.style.TextAlign
+import com.tinyapps.transactions.ui.state.TagState
+import com.tinyapps.transactions.ui.state.TypeState
 
 /**
  * Created by ChuTien on ${1/25/2017}.
@@ -107,7 +114,6 @@ fun TransactionsComponent(transactions: List<Transaction>) {
     VerticalScroller(modifier = Modifier.fillMaxHeight().padding(8.dp)) {
         Column {
 
-            FilterComponent()
             val gradientBrush = HorizontalGradient(
                 colors = listOf(gradientStart, gradientEnd),
                 startX = 0f,
@@ -201,6 +207,7 @@ fun DateComponent(date: Long) {
 
 @Composable
 fun FilterComponent() {
+    var appState by state { AppState() }
     Row(
         modifier = Modifier.fillMaxWidth().height(40.dp).padding(start = 16.dp, end = 16.dp),
         verticalGravity = Alignment.CenterVertically,
@@ -218,17 +225,16 @@ fun FilterComponent() {
                     fontWeight = FontWeight.W100, fontSize = 14.sp, color = textSecondary
                 )
             )
-            FilterCircle(countFilter = 5)
+            FilterCircle(countFilter = 5,appState = appState)
         }
 
     }
 }
 
 @Composable
-fun FilterCircle(countFilter: Int) {
-    var appState by state { AppState() }
+fun FilterCircle(countFilter: Int,appState : AppState) {
     val onClick: () -> Unit = {
-        appState = appState.copy(openDialog = true)
+        appState.openDialog = true
         Log.d("Tien", "appState -> true")
     }
     Box(
@@ -243,24 +249,123 @@ fun FilterCircle(countFilter: Int) {
 
 @Composable
 fun FilterOptionComponent() {
-        Log.d("Tien", "appState -> state -> true")
-        AlertDialog(
+    Log.d("Tien", "appState -> state -> true")
+    var sliderValue by state { 0f }
+    var typeState by state { TypeState() }
+    var tagState by state { TagState() }
+    var appState by state { AppState() }
+    if (appState.openDialog) {
+        Dialog(
             onCloseRequest = {
+                appState.openDialog = false
             },
-            title = {
-                Text(text = "Title")
-            },
-            text = {
-                Text("This is alert dialog in jetpack compose!")
-            },
-            confirmButton = {
-                Button(text = {
-                    Text(text = "Apply")
-                }, onClick = {
-                    Log.d("Tien", "appState -> state -> false")
-                })
-            },
-            buttonLayout = AlertDialogButtonLayout.SideBySide
-        )
+            children = {
+                Box(backgroundColor = filter, modifier = Modifier.fillMaxWidth().fillMaxHeight()) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().fillMaxHeight(),
+                        verticalArrangement = Arrangement.SpaceBetween
+                    ) {
 
+                        Row(
+                            verticalGravity = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.padding(top = 4.dp)
+                        ) {
+                            Icon(asset = Icons.Default.Close, tint = filterText)
+                            Text(
+                                modifier = Modifier.weight(1f),
+                                text = "Filters",
+                                style = TextStyle(color = filterText),
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                        FilterHeaderLine("ACCOUNT")
+                        Slider(
+                            value = sliderValue,
+                            valueRange = 0f..10f,
+                            steps = 5,
+                            color = filterText,
+                            onValueChange = { sliderValue = it })
+                        FilterByType(listOf("Revenue", "Expenses"), typeState)
+                        FilterHeaderLine("TAGS")
+                        FilterByTag(listOf("Fx", "Coin", "Food", "Drink"), tagState)
+                        Button(
+                            modifier = Modifier.fillMaxWidth().height(50.dp),
+                            onClick = { appState.openDialog = false },
+                            backgroundColor = filterText
+                        ) {
+                            Text(
+                                text = "APPLY",
+                                style = TextStyle(fontSize = TextUnit.Sp(20), color = filterSection)
+                            )
+                        }
+                    }
+                }
+            }
+        )
+    }
+
+}
+
+@Composable
+private fun FilterByType(options: List<String>, formState: TypeState) {
+    FilterHeaderLine("TYPE")
+    RadioGroup {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            options.forEach { text ->
+                val selected = text == formState.selectedOption
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = text,
+                        style = TextStyle(color = filterText, fontWeight = FontWeight.W500)
+                    )
+                    RadioButton(
+                        selected = selected,
+                        onSelect = { formState.selectedOption = text },
+                        color = Color.White
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun FilterByTag(tags: List<String>, formState: TagState) {
+    Column(
+        modifier = Modifier.fillMaxWidth() + Modifier.padding(4.dp),
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
+        tags.forEach { text ->
+            val selected = text == formState.selectedOption
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = text,
+                    style = TextStyle(color = filterText, fontWeight = FontWeight.W500)
+                )
+                TriStateCheckbox(
+                    state = if (selected) ToggleableState.On else ToggleableState.Off,
+                    onClick = { formState.selectedOption = text })
+            }
+        }
+
+    }
+}
+
+@Composable
+private fun FilterHeaderLine(title: String) {
+    Row(verticalGravity = Alignment.CenterVertically) {
+        Text(
+            text = title,
+            style = TextStyle(color = filterSection, fontWeight = FontWeight.W500),
+            modifier = Modifier.width(80.dp)
+        )
+        Divider(color = filterSection, thickness = 1.dp)
+    }
 }

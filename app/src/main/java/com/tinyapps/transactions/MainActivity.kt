@@ -27,12 +27,12 @@ import com.tinyapps.common_jvm.extension.number.format
 import com.tinyapps.transactions.model.Transaction
 import com.tinyapps.transactions.model.Wallet
 import com.tinyapps.transactions.ui.*
+import com.tinyapps.transactions.ui.state.AppState
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            var openDialog = state { false }
             Scaffold(
                 floatingActionButton = {
                     FloatingActionButton(
@@ -63,7 +63,7 @@ class MainActivity : AppCompatActivity() {
                                     Wallet("Account Z", 43993)
                                 )
                             )
-
+                            FilterComponent()
                             TransactionsComponent(
                                 listOf(
                                     Transaction("SELL GU", 323, 12321421, "End Of Trend Up")

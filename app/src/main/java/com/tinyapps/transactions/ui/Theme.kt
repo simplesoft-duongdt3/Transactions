@@ -10,14 +10,14 @@ import androidx.ui.material.lightColorPalette
 private val DarkColorPalette = darkColorPalette(
     primary = purple200,
     primaryVariant = purple700,
-    secondary = teal200,
+    secondary = filter,
     background = Color.Black
 )
 
 private val LightColorPalette = lightColorPalette(
     primary = purple500,
     primaryVariant = purple700,
-    secondary = teal200,
+    secondary = filter,
     background = Color.White
 )
 
