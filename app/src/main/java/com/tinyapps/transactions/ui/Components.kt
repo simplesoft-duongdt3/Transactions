@@ -1,34 +1,35 @@
 package com.tinyapps.transactions.ui
 
 import android.util.Log
-import androidx.compose.*
+import androidx.compose.Composable
+import androidx.compose.getValue
+import androidx.compose.setValue
+import androidx.compose.state
 import androidx.ui.core.Alignment
 import androidx.ui.core.ContextAmbient
 import androidx.ui.core.Modifier
 import androidx.ui.foundation.*
-import androidx.ui.foundation.selection.ToggleableState
 import androidx.ui.foundation.shape.corner.CircleShape
 import androidx.ui.foundation.shape.corner.RoundedCornerShape
 import androidx.ui.graphics.Color
 import androidx.ui.graphics.HorizontalGradient
-import androidx.ui.graphics.ImageAsset
 import androidx.ui.graphics.TileMode
-import androidx.ui.graphics.vector.VectorAsset
 import androidx.ui.layout.*
 import androidx.ui.layout.RowScope.weight
 import androidx.ui.material.*
+import androidx.ui.material.icons.Icons
+import androidx.ui.material.icons.filled.Close
 import androidx.ui.text.TextStyle
 import androidx.ui.text.font.FontWeight
+import androidx.ui.text.style.TextAlign
 import androidx.ui.unit.TextUnit
 import androidx.ui.unit.dp
 import androidx.ui.unit.sp
 import com.tinyapps.common_jvm.extension.number.format
 import com.tinyapps.transactions.model.Transaction
 import com.tinyapps.transactions.model.Wallet
+import com.tinyapps.transactions.ui.state.AmountState
 import com.tinyapps.transactions.ui.state.AppState
-import androidx.ui.material.icons.Icons
-import androidx.ui.material.icons.filled.Close
-import androidx.ui.text.style.TextAlign
 import com.tinyapps.transactions.ui.state.TagState
 import com.tinyapps.transactions.ui.state.TypeState
 
@@ -206,8 +207,7 @@ fun DateComponent(date: Long) {
 }
 
 @Composable
-fun FilterComponent() {
-    var appState by state { AppState() }
+fun FilterComponent(appState: AppState) {
     Row(
         modifier = Modifier.fillMaxWidth().height(40.dp).padding(start = 16.dp, end = 16.dp),
         verticalGravity = Alignment.CenterVertically,
@@ -225,14 +225,14 @@ fun FilterComponent() {
                     fontWeight = FontWeight.W100, fontSize = 14.sp, color = textSecondary
                 )
             )
-            FilterCircle(countFilter = 5,appState = appState)
+            FilterCircle(countFilter = 5, appState = appState)
         }
 
     }
 }
 
 @Composable
-fun FilterCircle(countFilter: Int,appState : AppState) {
+fun FilterCircle(countFilter: Int, appState: AppState) {
     val onClick: () -> Unit = {
         appState.openDialog = true
         Log.d("Tien", "appState -> true")
@@ -248,62 +248,67 @@ fun FilterCircle(countFilter: Int,appState : AppState) {
 }
 
 @Composable
-fun FilterOptionComponent() {
-    Log.d("Tien", "appState -> state -> true")
-    var sliderValue by state { 0f }
+fun FilterOptionComponent(appState: AppState) {
+    var amountState by state { AmountState() }
     var typeState by state { TypeState() }
     var tagState by state { TagState() }
-    var appState by state { AppState() }
     if (appState.openDialog) {
-        Dialog(
-            onCloseRequest = {
-                appState.openDialog = false
-            },
-            children = {
-                Box(backgroundColor = filter, modifier = Modifier.fillMaxWidth().fillMaxHeight()) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth().fillMaxHeight(),
-                        verticalArrangement = Arrangement.SpaceBetween
-                    ) {
+        Box(backgroundColor = filter, modifier = Modifier.fillMaxWidth().fillMaxHeight()) {
+            Column(
+                modifier = Modifier.fillMaxWidth().weight(1f).padding(16.dp)
+            ) {
+                Row(
+                    verticalGravity = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
 
-                        Row(
-                            verticalGravity = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            modifier = Modifier.padding(top = 4.dp)
-                        ) {
-                            Icon(asset = Icons.Default.Close, tint = filterText)
-                            Text(
-                                modifier = Modifier.weight(1f),
-                                text = "Filters",
-                                style = TextStyle(color = filterText),
-                                textAlign = TextAlign.Center
-                            )
-                        }
-                        FilterHeaderLine("ACCOUNT")
-                        Slider(
-                            value = sliderValue,
-                            valueRange = 0f..10f,
-                            steps = 5,
-                            color = filterText,
-                            onValueChange = { sliderValue = it })
-                        FilterByType(listOf("Revenue", "Expenses"), typeState)
-                        FilterHeaderLine("TAGS")
-                        FilterByTag(listOf("Fx", "Coin", "Food", "Drink"), tagState)
-                        Button(
-                            modifier = Modifier.fillMaxWidth().height(50.dp),
-                            onClick = { appState.openDialog = false },
-                            backgroundColor = filterText
-                        ) {
-                            Text(
-                                text = "APPLY",
-                                style = TextStyle(fontSize = TextUnit.Sp(20), color = filterSection)
-                            )
-                        }
-                    }
+                    Icon(asset = Icons.Default.Close,
+                        tint = filterText,
+                        modifier = Modifier.clickable(
+                            onClick = { appState.openDialog = false }
+                        ))
+                    Text(
+                        modifier = Modifier.weight(1f).padding(end = 16.dp),
+                        text = "Filters",
+                        style = TextStyle(color = filterText, fontWeight = FontWeight.W700),
+                        textAlign = TextAlign.Center
+                    )
                 }
+                FilterHeaderLine("LIMIT")
+                Column(modifier = Modifier.padding(top = 8.dp)) {
+                    Box(modifier = Modifier.fillMaxWidth(), gravity = ContentGravity.Center) {
+                        Text(
+                            text = "$${amountState.value?.format()}",
+                            style = TextStyle(color = filterText, fontWeight = FontWeight.W700)
+                        )
+                    }
+                    Slider(
+                        value = amountState.value ?: amountState.max,
+                        valueRange = 0f..amountState.max,
+                        steps = 5,
+                        color = filterText,
+                        onValueChange = { amountState.value = it })
+                }
+
+                FilterByType(listOf("Revenue", "Expenses"), typeState)
+                FilterHeaderLine("TAGS")
+                FilterByTag(listOf("Fx", "Coin", "Food", "Drink"), tagState)
             }
-        )
+            Box(
+                modifier = Modifier.fillMaxWidth().height(50.dp).clickable(onClick = {
+                    appState.openDialog = false
+                }),
+                gravity = ContentGravity.Center,
+                backgroundColor = filterText
+            ) {
+                Text(
+                    text = "APPLY",
+                    style = TextStyle(fontSize = TextUnit.Sp(20), color = filterSection)
+                )
+            }
+        }
     }
+
 
 }
 
@@ -311,7 +316,7 @@ fun FilterOptionComponent() {
 private fun FilterByType(options: List<String>, formState: TypeState) {
     FilterHeaderLine("TYPE")
     RadioGroup {
-        Column(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
             options.forEach { text ->
                 val selected = text == formState.selectedOption
                 Row(
@@ -336,7 +341,7 @@ private fun FilterByType(options: List<String>, formState: TypeState) {
 @Composable
 private fun FilterByTag(tags: List<String>, formState: TagState) {
     Column(
-        modifier = Modifier.fillMaxWidth() + Modifier.padding(4.dp),
+        modifier = Modifier.fillMaxWidth() + Modifier.padding(top = 8.dp),
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         tags.forEach { text ->
@@ -349,9 +354,9 @@ private fun FilterByTag(tags: List<String>, formState: TagState) {
                     text = text,
                     style = TextStyle(color = filterText, fontWeight = FontWeight.W500)
                 )
-                TriStateCheckbox(
-                    state = if (selected) ToggleableState.On else ToggleableState.Off,
-                    onClick = { formState.selectedOption = text })
+                Checkbox(
+                    checked = selected,
+                    onCheckedChange = { formState.selectedOption = text })
             }
         }
 
@@ -360,7 +365,7 @@ private fun FilterByTag(tags: List<String>, formState: TagState) {
 
 @Composable
 private fun FilterHeaderLine(title: String) {
-    Row(verticalGravity = Alignment.CenterVertically) {
+    Row(verticalGravity = Alignment.CenterVertically, modifier = Modifier.padding(top = 16.dp)) {
         Text(
             text = title,
             style = TextStyle(color = filterSection, fontWeight = FontWeight.W500),
