@@ -21,6 +21,7 @@ var textSecondary   = Color(0xFF6D8194)
 var gradientStart   = Color(0xFFF2F2F2)
 var gradientEnd   = Color(0xFFFDFDFD)
 val titleText   = Color(0xFF2E608C)
+val emptyBackground   = Color(0xFFFCFCFC)
 
 val colors = listOf(
 Color(0xFFffd7d7.toInt()),

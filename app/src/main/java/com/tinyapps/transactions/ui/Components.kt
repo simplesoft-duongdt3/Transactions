@@ -2,13 +2,12 @@ package com.tinyapps.transactions.ui
 
 import android.util.Log
 import androidx.compose.Composable
-import androidx.compose.getValue
-import androidx.compose.setValue
-import androidx.compose.state
+import androidx.compose.remember
 import androidx.ui.core.Alignment
 import androidx.ui.core.ContextAmbient
 import androidx.ui.core.Modifier
 import androidx.ui.foundation.*
+import androidx.ui.foundation.lazy.LazyColumnItems
 import androidx.ui.foundation.shape.corner.CircleShape
 import androidx.ui.foundation.shape.corner.RoundedCornerShape
 import androidx.ui.graphics.Color
@@ -19,19 +18,23 @@ import androidx.ui.layout.RowScope.weight
 import androidx.ui.material.*
 import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.filled.Close
+import androidx.ui.material.ripple.RippleIndication
+import androidx.ui.res.imageResource
 import androidx.ui.text.TextStyle
 import androidx.ui.text.font.FontWeight
 import androidx.ui.text.style.TextAlign
 import androidx.ui.unit.TextUnit
 import androidx.ui.unit.dp
 import androidx.ui.unit.sp
+import com.tinyapps.common_jvm.extension.date.format
 import com.tinyapps.common_jvm.extension.number.format
+import com.tinyapps.transactions.R
 import com.tinyapps.transactions.model.Transaction
 import com.tinyapps.transactions.model.Wallet
-import com.tinyapps.transactions.ui.state.AmountState
-import com.tinyapps.transactions.ui.state.AppState
-import com.tinyapps.transactions.ui.state.TagState
-import com.tinyapps.transactions.ui.state.TypeState
+import com.tinyapps.transactions.ui.listener.IFilter
+import com.tinyapps.transactions.ui.state.*
+import java.util.*
+import kotlin.math.abs
 
 /**
  * Created by ChuTien on ${1/25/2017}.
@@ -111,75 +114,102 @@ fun WalletsComponent(wallets: List<Wallet>) {
 }
 
 @Composable
-fun TransactionsComponent(transactions: List<Transaction>) {
-    VerticalScroller(modifier = Modifier.fillMaxHeight().padding(8.dp)) {
-        Column {
-
+fun TransactionsComponent(
+    transactions: List<Transaction>,
+    tagState: TagState,
+    typeState: TypeState,
+    amountState: AmountState,
+    appState: AppState
+) {
+    val amountValue = amountState.value ?: amountState.max
+    Log.d("Tien", "TransactionsComponent ${amountValue}")
+    val listTransactions =
+        when (typeState.selectedOption) {
+            "Expenses" -> {
+                transactions.filter { transaction -> (transaction.amount < 0 && abs(transaction.amount) < amountValue) }
+            }
+            "Revenue" -> {
+                transactions.filter { transaction -> (transaction.amount >= 0 && abs(transaction.amount) < amountValue) }
+            }
+            else -> {
+                transactions.filter { transaction -> abs(transaction.amount) < amountValue }
+            }
+        }
+    Log.d("Tien", "TransactionsComponent $listTransactions")
+    appState.numOfTransaction = listTransactions.size
+    if (listTransactions.isNotEmpty()) {
+        LazyColumnItems(
+            items = listTransactions,
+            modifier = Modifier.fillMaxHeight().padding(8.dp)
+        ) {
             val gradientBrush = HorizontalGradient(
                 colors = listOf(gradientStart, gradientEnd),
                 startX = 0f,
                 endX = 900f,
                 tileMode = TileMode.Clamp
             )
-            for ((index, transaction) in transactions.withIndex()) {
-                val isProfit = transaction.amount > 0
+            val isProfit = it.amount > 0
 
-                Card(
-                    shape = RoundedCornerShape(4.dp),
-                    elevation = 0.dp,
-                    modifier = Modifier.fillMaxWidth().height(120.dp).padding(8.dp)
+            Card(
+                shape = RoundedCornerShape(4.dp),
+                elevation = 0.dp,
+                modifier = Modifier.fillMaxWidth().height(120.dp).padding(8.dp)
+            ) {
+                Row(
+                    verticalGravity = Alignment.CenterVertically,
+                    modifier = Modifier.drawBackground(gradientBrush)
                 ) {
-                    Row(
-                        verticalGravity = Alignment.CenterVertically,
-                        modifier = Modifier.drawBackground(gradientBrush)
-                    ) {
 
-                        Divider(
-                            modifier = Modifier.width(4.dp).fillMaxHeight(),
-                            color = if (isProfit) positive else negative
-                        )
+                    Divider(
+                        modifier = Modifier.width(4.dp).fillMaxHeight(),
+                        color = if (isProfit) positive else negative
+                    )
 
-                        DateComponent(date = transaction.date)
+                    DateComponent(timeInMillis = it.date)
 
-                        Column(modifier = Modifier.weight(0.7f)) {
-                            Text(
-                                transaction.name,
-                                style = TextStyle(
-                                    fontSize = 16.sp,
-                                    color = textPrimary,
-                                    fontWeight = FontWeight.W700
-                                )
-                            )
-                            Text(
-                                transaction.comment,
-                                style = TextStyle(
-                                    fontSize = 14.sp,
-                                    color = textSecondary,
-                                    fontWeight = FontWeight.W100
-                                )
-                            )
-                        }
-
-
+                    Column(modifier = Modifier.weight(0.7f)) {
                         Text(
-                            "${(if (isProfit) "+" else "")}${transaction.amount.format()}$",
-                            modifier = Modifier.weight(0.3f),
+                            it.name,
                             style = TextStyle(
-                                fontSize = 18.sp,
-                                color = if (isProfit) textPositive else textNegative,
-                                fontWeight = FontWeight.W400
+                                fontSize = 16.sp,
+                                color = textPrimary,
+                                fontWeight = FontWeight.W700
+                            )
+                        )
+                        Text(
+                            it.comment,
+                            style = TextStyle(
+                                fontSize = 14.sp,
+                                color = textSecondary,
+                                fontWeight = FontWeight.W100
                             )
                         )
                     }
 
+
+                    Text(
+                        "${(if (isProfit) "+" else "")}${it.amount.format()}$",
+                        modifier = Modifier.weight(0.3f),
+                        style = TextStyle(
+                            fontSize = 18.sp,
+                            color = if (isProfit) textPositive else textNegative,
+                            fontWeight = FontWeight.W400
+                        )
+                    )
                 }
+
             }
         }
+    } else {
+        EmptyView()
     }
 }
 
 @Composable
-fun DateComponent(date: Long) {
+fun DateComponent(timeInMillis: Long) {
+    val calendar = Calendar.getInstance()
+    calendar.timeInMillis = timeInMillis
+    val date = calendar.time
     Card(
         shape = RoundedCornerShape(4.dp),
         elevation = 4.dp,
@@ -187,7 +217,7 @@ fun DateComponent(date: Long) {
     ) {
         Column(horizontalGravity = Alignment.CenterHorizontally) {
             Text(
-                "12",
+                date.format("dd"),
                 style = TextStyle(
                     fontSize = 18.sp,
                     color = textPrimary,
@@ -195,7 +225,7 @@ fun DateComponent(date: Long) {
                 )
             )
             Text(
-                "May",
+                date.format("MMM"),
                 style = TextStyle(
                     fontSize = 16.sp,
                     color = textSecondary,
@@ -208,130 +238,188 @@ fun DateComponent(date: Long) {
 
 @Composable
 fun FilterComponent(appState: AppState) {
+
     Row(
-        modifier = Modifier.fillMaxWidth().height(40.dp).padding(start = 16.dp, end = 16.dp),
+        modifier = Modifier.fillMaxWidth().height(60.dp).padding(start = 16.dp, end = 16.dp),
         verticalGravity = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            text = "Transaction history", style = TextStyle(
-                fontWeight = FontWeight.W300, fontSize = 16.sp, color = textPrimary
-            )
-        )
-        Row(verticalGravity = Alignment.CenterVertically) {
+        Stack(modifier = Modifier.wrapContentWidth().fillMaxHeight()) {
             Text(
-                modifier = Modifier.padding(end = 4.dp),
-                text = "Filter", style = TextStyle(
-                    fontWeight = FontWeight.W100, fontSize = 14.sp, color = textSecondary
+                modifier = Modifier.gravity(Alignment.CenterStart),
+                text = "Transaction history     ", style = TextStyle(
+                    fontWeight = FontWeight.W300, fontSize = 16.sp, color = textPrimary
                 )
             )
-            FilterCircle(countFilter = 5, appState = appState)
+            Box(
+                modifier = Modifier.gravity(Alignment.TopEnd)
+                    .wrapContentHeight(align = Alignment.CenterVertically)
+                    .padding(top = 12.dp, end = 8.dp)
+            ) {
+                Badge(num = appState.numOfTransaction)
+            }
+        }
+
+        Surface(
+            shape = RoundedCornerShape(16.dp),
+            color = filterSection
+        ) {
+            Row(
+                verticalGravity = Alignment.CenterVertically,
+                modifier = Modifier
+                    .clickable(onClick = {
+                        appState.updateOpenDialogFlag(true)
+                        Log.d("Tien", "Filter Clicked")
+                    }, indication = RippleIndication(bounded = true, radius = 20.dp))
+            ) {
+                Text(
+                    modifier = Modifier.padding(start = 4.dp, end = 4.dp),
+                    text = " Filter ", style = TextStyle(
+                        fontWeight = FontWeight.W700, fontSize = 12.sp, color = filterText
+                    )
+                )
+                FilterCircle(countFilter = 5)
+            }
         }
 
     }
 }
 
 @Composable
-fun FilterCircle(countFilter: Int, appState: AppState) {
-    val onClick: () -> Unit = {
-        appState.openDialog = true
-        Log.d("Tien", "appState -> true")
-    }
+fun FilterCircle(sizeDp: Int = 20, countFilter: Int) {
     Box(
-        modifier = Modifier.width(20.dp).height(20.dp).clickable(onClick = onClick),
+        modifier = Modifier.width(sizeDp.dp).height(sizeDp.dp),
         shape = CircleShape,
         backgroundColor = filter,
         gravity = ContentGravity.Center
     ) {
-        Text(text = "$countFilter", style = TextStyle(color = Color.White, fontSize = 12.sp))
+        Text(
+            text = "$countFilter",
+            style = TextStyle(color = Color.White, fontSize = 12.sp),
+            textAlign = TextAlign.Center
+        )
     }
 }
 
 @Composable
-fun FilterOptionComponent(appState: AppState) {
-    var amountState by state { AmountState() }
-    var typeState by state { TypeState() }
-    var tagState by state { TagState() }
-    if (appState.openDialog) {
-        Box(backgroundColor = filter, modifier = Modifier.fillMaxWidth().fillMaxHeight()) {
-            Column(
-                modifier = Modifier.fillMaxWidth().weight(1f).padding(16.dp)
-            ) {
-                Row(
-                    verticalGravity = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
+fun Badge(num: Int) {
+    Box(
+        modifier = Modifier.wrapContentWidth(align = Alignment.CenterHorizontally)
+            .wrapContentHeight(align = Alignment.CenterVertically),
+        shape = RoundedCornerShape(4.dp),
+        backgroundColor = filter,
+        gravity = ContentGravity.Center
+    ) {
+        Text(
+            modifier = Modifier.padding(2.dp),
+            text = "$num",
+            style = TextStyle(color = Color.White, fontSize = 10.sp),
+            textAlign = TextAlign.Center
+        )
+    }
+}
 
+@Composable
+fun FilterOptionComponent(
+    iFilter: IFilter
+) {
+    val amountFilterState = remember { AmountState() }
+    val tagFilterState = remember { TagFilterState() }
+    val typeFilterState = remember { TypeFilterState() }
+    Box(backgroundColor = filter, modifier = Modifier.fillMaxWidth().fillMaxHeight()) {
+        Column(
+            modifier = Modifier.fillMaxWidth().weight(1f).padding(16.dp)
+        ) {
+            Row(
+                verticalGravity = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = filter
+                ) {
                     Icon(asset = Icons.Default.Close,
                         tint = filterText,
                         modifier = Modifier.clickable(
-                            onClick = { appState.openDialog = false }
+                            onClick = {
+                                iFilter.fillerCancel()
+                            },indication = RippleIndication(bounded = true, radius = 16.dp)
                         ))
-                    Text(
-                        modifier = Modifier.weight(1f).padding(end = 16.dp),
-                        text = "Filters",
-                        style = TextStyle(color = filterText, fontWeight = FontWeight.W700),
-                        textAlign = TextAlign.Center
-                    )
                 }
-                FilterHeaderLine("LIMIT")
-                Column(modifier = Modifier.padding(top = 8.dp)) {
-                    Box(modifier = Modifier.fillMaxWidth(), gravity = ContentGravity.Center) {
-                        Text(
-                            text = "$${amountState.value?.format()}",
-                            style = TextStyle(color = filterText, fontWeight = FontWeight.W700)
-                        )
-                    }
-                    Slider(
-                        value = amountState.value ?: amountState.max,
-                        valueRange = 0f..amountState.max,
-                        steps = 5,
-                        color = filterText,
-                        onValueChange = { amountState.value = it })
-                }
-
-                FilterByType(listOf("Revenue", "Expenses"), typeState)
-                FilterHeaderLine("TAGS")
-                FilterByTag(listOf("Fx", "Coin", "Food", "Drink"), tagState)
-            }
-            Box(
-                modifier = Modifier.fillMaxWidth().height(50.dp).clickable(onClick = {
-                    appState.openDialog = false
-                }),
-                gravity = ContentGravity.Center,
-                backgroundColor = filterText
-            ) {
                 Text(
-                    text = "APPLY",
-                    style = TextStyle(fontSize = TextUnit.Sp(20), color = filterSection)
+                    modifier = Modifier.weight(1f).padding(end = 16.dp),
+                    text = "Filters",
+                    style = TextStyle(color = filterText, fontWeight = FontWeight.W700),
+                    textAlign = TextAlign.Center
                 )
             }
+            FilterHeaderLine("LIMIT")
+            Column(modifier = Modifier.padding(top = 8.dp)) {
+                Box(modifier = Modifier.fillMaxWidth(), gravity = ContentGravity.Center) {
+                    Text(
+                        text = "$${amountFilterState.value?.format()}",
+                        style = TextStyle(color = filterText, fontWeight = FontWeight.W700)
+                    )
+                }
+                Slider(
+                    value = amountFilterState.value?.toFloat() ?: amountFilterState.max.toFloat(),
+                    valueRange = 0f..amountFilterState.max.toFloat(),
+                    color = filterText,
+                    onValueChange = { amountFilterState.value = it.toDouble() })
+            }
+
+            FilterByType(listOf("All", "Revenue", "Expenses"), typeFilterState)
+            FilterHeaderLine("TAGS")
+            FilterByTag(listOf("Fx", "Coin", "Food", "Drink"), tagFilterState)
+        }
+        Box(
+            modifier = Modifier.fillMaxWidth().height(50.dp)
+                .clickable(onClick = {
+                    iFilter.fillerResults(
+                        amountState = amountFilterState,
+                        tagState = tagFilterState,
+                        typeState = typeFilterState
+                    )
+                },indication = RippleIndication(bounded = true)),
+            gravity = ContentGravity.Center,
+            backgroundColor = filterText
+        ) {
+            Text(
+                text = "APPLY",
+                style = TextStyle(fontSize = TextUnit.Sp(20), color = filterSection)
+            )
         }
     }
-
 
 }
 
 @Composable
-private fun FilterByType(options: List<String>, formState: TypeState) {
+private fun FilterByType(options: List<String>, formState: TypeFilterState) {
     FilterHeaderLine("TYPE")
     RadioGroup {
         Column(modifier = Modifier.fillMaxWidth().padding(top = 8.dp)) {
-            options.forEach { text ->
-                val selected = text == formState.selectedOption
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = text,
-                        style = TextStyle(color = filterText, fontWeight = FontWeight.W500)
-                    )
-                    RadioButton(
-                        selected = selected,
-                        onSelect = { formState.selectedOption = text },
-                        color = Color.White
-                    )
+            options.forEachIndexed { index, text ->
+                run {
+                    val selected: Boolean = if (formState.selectedOption.isNotEmpty()) {
+                        text == formState.selectedOption
+                    } else {
+                        index == 0
+                    }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(4.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = text,
+                            style = TextStyle(color = filterText, fontWeight = FontWeight.W500)
+                        )
+                        RadioButton(
+                            selected = selected,
+                            onSelect = { formState.selectedOption = text },
+                            color = Color.White
+                        )
+                    }
                 }
             }
         }
@@ -339,7 +427,8 @@ private fun FilterByType(options: List<String>, formState: TypeState) {
 }
 
 @Composable
-private fun FilterByTag(tags: List<String>, formState: TagState) {
+private fun FilterByTag(tags: List<String>, formState: TagFilterState) {
+    //todo Make tags can be multi choice
     Column(
         modifier = Modifier.fillMaxWidth() + Modifier.padding(top = 8.dp),
         verticalArrangement = Arrangement.SpaceBetween
@@ -372,5 +461,40 @@ private fun FilterHeaderLine(title: String) {
             modifier = Modifier.width(80.dp)
         )
         Divider(color = filterSection, thickness = 1.dp)
+    }
+}
+
+@Composable
+private fun EmptyView() {
+    val image = imageResource(id = R.drawable.img_empty)
+    Box(
+        backgroundColor = emptyBackground
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth().fillMaxHeight()
+            , horizontalGravity = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Image(image)
+            Text(
+                text = "Oh crap, you've\ngot nothing.",
+                style = TextStyle(
+                    color = Color.Black,
+                    fontWeight = FontWeight.W700,
+                    fontSize = 22.sp,
+                    textAlign = TextAlign.Center
+                )
+            )
+            Text(
+                modifier = Modifier.padding(bottom = 56.dp),
+                text = "Use add button to add transactions",
+                style = TextStyle(
+                    color = Color.Black,
+                    fontWeight = FontWeight.W200,
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center
+                )
+            )
+        }
     }
 }

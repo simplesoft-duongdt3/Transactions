@@ -7,7 +7,6 @@ import androidx.compose.setValue
 /**
  * Created by ChuTien on ${1/25/2017}.
  */
-class AmountState(value: Double? = 1000.0, max: Double = 2000.0) {
-    var value by mutableStateOf(value)
-    var max by mutableStateOf(max)
+class TagFilterState(selectedOption: String = "") {
+    var selectedOption by mutableStateOf(selectedOption)
 }

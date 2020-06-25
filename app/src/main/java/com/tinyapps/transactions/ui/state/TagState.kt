@@ -1,9 +1,12 @@
 package com.tinyapps.transactions.ui.state
 
-import androidx.compose.Model
+import androidx.compose.getValue
+import androidx.compose.mutableStateOf
+import androidx.compose.setValue
 
 /**
  * Created by ChuTien on ${1/25/2017}.
  */
-@Model
-data class TagState (var selectedOption : String? = null)
+class TagState (selectedOption : String = ""){
+    var selectedOption by mutableStateOf(selectedOption)
+}

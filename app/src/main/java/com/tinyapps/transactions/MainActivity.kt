@@ -1,10 +1,10 @@
 package com.tinyapps.transactions
 
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.Composable
-import androidx.compose.getValue
-import androidx.compose.setValue
+import androidx.compose.remember
 import androidx.compose.state
 import androidx.ui.core.setContent
 import androidx.ui.foundation.Icon
@@ -19,19 +19,32 @@ import androidx.ui.tooling.preview.Preview
 import com.tinyapps.transactions.model.Transaction
 import com.tinyapps.transactions.model.Wallet
 import com.tinyapps.transactions.ui.*
-import com.tinyapps.transactions.ui.state.AppState
+import com.tinyapps.transactions.ui.listener.IFilter
+import com.tinyapps.transactions.ui.state.*
 
 class MainActivity : AppCompatActivity() {
+    private val backPressHandler =
+        BackPressHandler(true)
+
+    override fun onBackPressed() {
+        if (backPressHandler.onBackPress()) {
+            super.onBackPressed()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            var appState by state { AppState() }
+            val appState = remember { AppState(backPressHandler = backPressHandler) }
+            val tagState = remember { TagState() }
+            val typeState = remember { TypeState() }
+            var amountState = remember { AmountState() }
             Scaffold(
                 floatingActionButton = {
                     if (!appState.openDialog) {
                         FloatingActionButton(
                             onClick = {
-
+                            //todo open input form
                             },
                             backgroundColor = filter,
                             contentColor = Color.White
@@ -39,11 +52,9 @@ class MainActivity : AppCompatActivity() {
                             Icon(asset = Icons.Filled.Add)
                         }
                     }
-
                 },
                 bodyContent = {
                     val enableDarkMode = state { false }
-
                     TransactionsTheme(enableDarkMode) {
                         Stack {
                             Column {
@@ -65,77 +76,97 @@ class MainActivity : AppCompatActivity() {
                                 FilterComponent(appState)
                                 TransactionsComponent(
                                     listOf(
-                                        Transaction("SELL GU", 323, 12321421, "End Of Trend Up")
-                                        ,
-                                        Transaction("BUY UCAD", 151, 12321421, "Block Trend DOWN")
-                                        ,
-                                        Transaction("BUY UCAD", -151, 12321421, "Block Trend DOWN")
-                                        ,
-                                        Transaction("BUY UCAD", 151, 12321421, "Block Trend DOWN")
-                                        ,
-                                        Transaction("BUY UCAD", -151, 12321421, "Block Trend DOWN")
-                                        ,
-                                        Transaction("BUY UCAD", 151, 12321421, "Block Trend DOWN")
-                                        ,
-                                        Transaction("SELL EF", -131, 12321421, "End Trend Up")
-                                        ,
-                                        Transaction("SELL EF", 131, 12321421, "End Trend Up")
-                                        ,
-                                        Transaction("SELL EF", 131, 12321421, "End Trend Up")
-                                        ,
-                                        Transaction("SELL EF", -131, 12321421, "End Trend Up")
-                                        ,
-                                        Transaction("SELL EF", 131, 12321421, "End Trend Up")
-                                        ,
-                                        Transaction("SELL EF", -131, 12321421, "End Trend Up")
-                                        ,
-                                        Transaction("BUY EN", -152, 12321421, "Block Trend DOWN")
-                                    )
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction(),
+                                        Transaction()
+                                    ),
+                                    tagState = tagState,
+                                    typeState = typeState,
+                                    amountState = amountState,
+                                    appState = appState
                                 )
                             }
-                            FilterOptionComponent(appState)
+                            if (appState.openDialog) {
+                                FilterOptionComponent(iFilter = object : IFilter {
+                                    override fun fillerResults(
+                                        amountFilterState: AmountState,
+                                        tagFilterState: TagFilterState,
+                                        typeFilterState: TypeFilterState
+                                    ) {
+                                        Log.d(
+                                            "Tien",
+                                            "fillerResults ${appState.openDialog} ${typeFilterState.selectedOption}"
+                                        )
+                                        amountState = amountFilterState
+                                        tagState.selectedOption = tagFilterState.selectedOption
+                                        typeState.selectedOption =
+                                            typeFilterState.selectedOption
+                                        appState.updateOpenDialogFlag(false)
+                                    }
+
+                                    override fun fillerCancel() {
+                                        Log.d("Tien", "fillerCancel ${appState.openDialog}")
+                                        appState.updateOpenDialogFlag(false)
+                                    }
+
+                                }
+                                )
+                            }
 
                         }
-
-
                     }
                 }
             )
 
         }
     }
+//
+//    override fun onBackPressed() {
+//        var appState by state { AppState() }
+//        if (appState.openDialog) {
+//            appState.openDialog = false
+//        } else
+//            super.onBackPressed()
+//    }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    val enableDarkMode = state { false }
-    TransactionsTheme(enableDarkMode) {
-        Column {
-            val onCheckChanged = { _: Boolean ->
-                enableDarkMode.value = !enableDarkMode.value
-            }
-            HeaderComponent(
-                enableDarkMode = enableDarkMode.value,
-                onCheckChanged = onCheckChanged
-            )
-            WalletsComponent(listOf(Wallet("Account X", 93993)))
-            TransactionsComponent(
-                listOf(
-                    Transaction("SELL GU", 323, 123121421, "End Of Trend Up")
-                    , Transaction("BUY UCAD", 151, 13214121, "Block Trend DOWN")
-                    , Transaction("SELL EF", -131, 17232141, "End Trend Up")
-                    , Transaction("BUY EN", -152, 12321421, "Block Trend DOWN")
-                )
-            )
-        }
-    }
+    val appState = remember{AppState(false,backPressHandler = BackPressHandler(false))}
+    FilterComponent(appState = appState)
 }
 
-
-@Preview("Dialog Filter")
-@Composable
-fun DialogFilterPreview() {
-    var appState by state { AppState() }
-    FilterOptionComponent(appState)
-}
