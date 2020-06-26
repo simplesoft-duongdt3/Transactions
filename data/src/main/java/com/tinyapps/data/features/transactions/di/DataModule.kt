@@ -7,7 +7,7 @@ import com.tinyapps.data.features.transactions.services.TransactionApiServiceImp
 import com.tinyapps.domain.features.transactions.repository.TransactionRepository
 import org.koin.dsl.module
 
-val transactionModule = module {
+val dataModule = module {
 
     factory {
         TransactionListMapper()

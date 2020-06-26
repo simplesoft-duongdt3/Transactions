@@ -16,16 +16,19 @@ import androidx.ui.material.Scaffold
 import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.filled.Add
 import androidx.ui.tooling.preview.Preview
-import com.tinyapps.transactions.model.Transaction
-import com.tinyapps.transactions.model.Wallet
+import com.tinyapps.presentation.features.transactions.model.Transaction
+import com.tinyapps.presentation.features.transactions.model.Wallet
+import com.tinyapps.presentation.features.transactions.viewmodel.TransactionViewModel
 import com.tinyapps.transactions.ui.*
 import com.tinyapps.transactions.ui.listener.IFilter
 import com.tinyapps.transactions.ui.state.*
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : AppCompatActivity() {
     private val backPressHandler =
         BackPressHandler(true)
 
+    private val mTransactionViewModel: TransactionViewModel by viewModel()
     override fun onBackPressed() {
         if (backPressHandler.onBackPress()) {
             super.onBackPressed()
@@ -34,6 +37,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        mTransactionViewModel.getTransactions()
         setContent {
             val appState = remember { AppState(backPressHandler = backPressHandler) }
             val tagState = remember { TagState() }
@@ -44,7 +48,7 @@ class MainActivity : AppCompatActivity() {
                     if (!appState.openDialog) {
                         FloatingActionButton(
                             onClick = {
-                            //todo open input form
+                                //todo open input form
                             },
                             backgroundColor = filter,
                             contentColor = Color.White
@@ -68,51 +72,23 @@ class MainActivity : AppCompatActivity() {
                                 )
                                 WalletsComponent(
                                     listOf(
-                                        Wallet("Account X", 93993),
-                                        Wallet("Account Y", 33443),
-                                        Wallet("Account Z", 43993)
+                                        Wallet(
+                                            "Account X",
+                                            93993
+                                        ),
+                                        Wallet(
+                                            "Account Y",
+                                            33443
+                                        ),
+                                        Wallet(
+                                            "Account Z",
+                                            43993
+                                        )
                                     )
                                 )
                                 FilterComponent(appState)
-                                TransactionsComponent(
-                                    listOf(
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction(),
-                                        Transaction()
-                                    ),
+
+                                TransactionsComponent(mTransactionViewModel.transactionsLiveData,
                                     tagState = tagState,
                                     typeState = typeState,
                                     amountState = amountState,
@@ -126,10 +102,6 @@ class MainActivity : AppCompatActivity() {
                                         tagFilterState: TagFilterState,
                                         typeFilterState: TypeFilterState
                                     ) {
-                                        Log.d(
-                                            "Tien",
-                                            "fillerResults ${appState.openDialog} ${typeFilterState.selectedOption}"
-                                        )
                                         amountState = amountFilterState
                                         tagState.selectedOption = tagFilterState.selectedOption
                                         typeState.selectedOption =
@@ -153,20 +125,12 @@ class MainActivity : AppCompatActivity() {
 
         }
     }
-//
-//    override fun onBackPressed() {
-//        var appState by state { AppState() }
-//        if (appState.openDialog) {
-//            appState.openDialog = false
-//        } else
-//            super.onBackPressed()
-//    }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    val appState = remember{AppState(false,backPressHandler = BackPressHandler(false))}
+    val appState = remember { AppState(false, backPressHandler = BackPressHandler(false)) }
     FilterComponent(appState = appState)
 }
 

@@ -2,7 +2,9 @@ package com.tinyapps.transactions.ui
 
 import android.util.Log
 import androidx.compose.Composable
+import androidx.compose.getValue
 import androidx.compose.remember
+import androidx.lifecycle.LiveData
 import androidx.ui.core.Alignment
 import androidx.ui.core.ContextAmbient
 import androidx.ui.core.Modifier
@@ -15,6 +17,7 @@ import androidx.ui.graphics.HorizontalGradient
 import androidx.ui.graphics.TileMode
 import androidx.ui.layout.*
 import androidx.ui.layout.RowScope.weight
+import androidx.ui.livedata.observeAsState
 import androidx.ui.material.*
 import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.filled.Close
@@ -28,9 +31,9 @@ import androidx.ui.unit.dp
 import androidx.ui.unit.sp
 import com.tinyapps.common_jvm.extension.date.format
 import com.tinyapps.common_jvm.extension.number.format
+import com.tinyapps.presentation.features.transactions.model.Transaction
+import com.tinyapps.presentation.features.transactions.model.Wallet
 import com.tinyapps.transactions.R
-import com.tinyapps.transactions.model.Transaction
-import com.tinyapps.transactions.model.Wallet
 import com.tinyapps.transactions.ui.listener.IFilter
 import com.tinyapps.transactions.ui.state.*
 import java.util.*
@@ -114,13 +117,13 @@ fun WalletsComponent(wallets: List<Wallet>) {
 }
 
 @Composable
-fun TransactionsComponent(
-    transactions: List<Transaction>,
+fun TransactionsComponent(transactionsLiveData : LiveData<List<Transaction>>,
     tagState: TagState,
     typeState: TypeState,
     amountState: AmountState,
     appState: AppState
 ) {
+    val transactions by transactionsLiveData.observeAsState(initial = emptyList())
     val amountValue = amountState.value ?: amountState.max
     Log.d("Tien", "TransactionsComponent ${amountValue}")
     val listTransactions =
