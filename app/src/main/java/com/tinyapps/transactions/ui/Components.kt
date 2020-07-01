@@ -121,9 +121,6 @@ fun TransactionsComponent(
     appState: AppState
 ) {
     val transactions by transactionsLiveData.observeAsState(initial = emptyList())
-    transactions.forEach {
-        Log.d("TransactionsComponent",it.comment)
-    }
 
     appState.numOfTransaction = transactions.size
     if (transactions.isNotEmpty()) {
