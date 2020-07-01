@@ -37,7 +37,6 @@ import com.tinyapps.transactions.R
 import com.tinyapps.transactions.ui.listener.IFilter
 import com.tinyapps.transactions.ui.state.*
 import java.util.*
-import kotlin.math.abs
 
 /**
  * Created by ChuTien on ${1/25/2017}.
@@ -49,7 +48,7 @@ fun HeaderComponent(enableDarkMode: Boolean, onCheckChanged: (Boolean) -> Unit) 
         modifier = Modifier.padding(16.dp).fillMaxWidth(),
         verticalGravity = Alignment.CenterVertically
     ) {
-        // A pre-defined composable that's capable of rendering a switch. It honors the Material
+        // A pre-sdefined composable that's capable of rendering a switch. It honors the Material
         // Design specification.
         Row(
             modifier = Modifier.fillMaxWidth().weight(1f).padding(start = 32.dp),
@@ -117,94 +116,117 @@ fun WalletsComponent(wallets: List<Wallet>) {
 }
 
 @Composable
-fun TransactionsComponent(transactionsLiveData : LiveData<List<Transaction>>,
-    tagState: TagState,
-    typeState: TypeState,
-    amountState: AmountState,
+fun TransactionsComponent(
+    transactionsLiveData: LiveData<List<Transaction>>,
     appState: AppState
 ) {
     val transactions by transactionsLiveData.observeAsState(initial = emptyList())
-    val amountValue = amountState.value ?: amountState.max
-    Log.d("Tien", "TransactionsComponent ${amountValue}")
-    val listTransactions =
-        when (typeState.selectedOption) {
-            "Expenses" -> {
-                transactions.filter { transaction -> (transaction.amount < 0 && abs(transaction.amount) < amountValue) }
-            }
-            "Revenue" -> {
-                transactions.filter { transaction -> (transaction.amount >= 0 && abs(transaction.amount) < amountValue) }
-            }
-            else -> {
-                transactions.filter { transaction -> abs(transaction.amount) < amountValue }
-            }
-        }
-    Log.d("Tien", "TransactionsComponent $listTransactions")
-    appState.numOfTransaction = listTransactions.size
-    if (listTransactions.isNotEmpty()) {
+    transactions.forEach {
+        Log.d("TransactionsComponent",it.comment)
+    }
+
+    appState.numOfTransaction = transactions.size
+    if (transactions.isNotEmpty()) {
         LazyColumnItems(
-            items = listTransactions,
+            items = transactions,
             modifier = Modifier.fillMaxHeight().padding(8.dp)
         ) {
-            val gradientBrush = HorizontalGradient(
-                colors = listOf(gradientStart, gradientEnd),
-                startX = 0f,
-                endX = 900f,
-                tileMode = TileMode.Clamp
-            )
-            val isProfit = it.amount > 0
-
-            Card(
-                shape = RoundedCornerShape(4.dp),
-                elevation = 0.dp,
-                modifier = Modifier.fillMaxWidth().height(120.dp).padding(8.dp)
-            ) {
-                Row(
-                    verticalGravity = Alignment.CenterVertically,
-                    modifier = Modifier.drawBackground(gradientBrush)
-                ) {
-
-                    Divider(
-                        modifier = Modifier.width(4.dp).fillMaxHeight(),
-                        color = if (isProfit) positive else negative
-                    )
-
-                    DateComponent(timeInMillis = it.date)
-
-                    Column(modifier = Modifier.weight(0.7f)) {
-                        Text(
-                            it.name,
-                            style = TextStyle(
-                                fontSize = 16.sp,
-                                color = textPrimary,
-                                fontWeight = FontWeight.W700
-                            )
-                        )
-                        Text(
-                            it.comment,
-                            style = TextStyle(
-                                fontSize = 14.sp,
-                                color = textSecondary,
-                                fontWeight = FontWeight.W100
-                            )
-                        )
-                    }
-
-
-                    Text(
-                        "${(if (isProfit) "+" else "")}${it.amount.format()}$",
-                        modifier = Modifier.weight(0.3f),
-                        style = TextStyle(
-                            fontSize = 18.sp,
-                            color = if (isProfit) textPositive else textNegative,
-                            fontWeight = FontWeight.W400
-                        )
-                    )
-                }
-
-            }
+            TransactionItem(it = it)
         }
     } else {
         EmptyView()
+    }
+}
+
+
+@Composable
+fun TransactionItem(it: Transaction) {
+    val gradientBrush = HorizontalGradient(
+        colors = listOf(gradientStart, gradientEnd),
+        startX = 0f,
+        endX = 900f,
+        tileMode = TileMode.Clamp
+    )
+    val isProfit = it.amount > 0
+
+    Card(
+        shape = RoundedCornerShape(4.dp),
+        elevation = 0.dp,
+        modifier = Modifier.fillMaxWidth().height(120.dp).padding(8.dp)
+    ) {
+        Row(
+            verticalGravity = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.drawBackground(gradientBrush)
+        ) {
+
+            Divider(
+                modifier = Modifier.width(4.dp).fillMaxHeight(),
+                color = if (isProfit) positive else negative
+            )
+
+            DateComponent(timeInMillis = it.date)
+
+            Column(
+                modifier = Modifier.weight(0.7f).fillMaxHeight().padding(top = 16.dp),
+                horizontalGravity = Alignment.Start
+            ) {
+                Text(
+                    it.name,
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        color = textPrimary,
+                        fontWeight = FontWeight.W700
+                    )
+                )
+                Text(
+                    it.comment,
+                    style = TextStyle(
+                        fontSize = 14.sp,
+                        color = textSecondary,
+                        fontWeight = FontWeight.W100
+                    )
+                )
+                TransactionTags(tags = listOf("Food", "Drink", "Forex"))
+            }
+
+            Text(
+                "${(if (isProfit) "+" else "")}${it.amount.format()}$",
+                modifier = Modifier.weight(0.3f),
+                style = TextStyle(
+                    fontSize = 18.sp,
+                    color = if (isProfit) textPositive else textNegative,
+                    fontWeight = FontWeight.W400
+                )
+            )
+
+        }
+
+    }
+}
+
+@Composable
+fun TransactionTags(tags: List<String>) {
+    Row(
+        modifier = Modifier.wrapContentHeight()
+    ) {
+        tags.forEach {
+            Card(
+                modifier = Modifier.wrapContentWidth().wrapContentHeight().padding(2.dp),
+                shape = RoundedCornerShape(4.dp)
+            ) {
+                Text(
+                    modifier = Modifier.padding(2.dp).wrapContentHeight(),
+                    text = "#$it",
+                    style = TextStyle(
+                        color = filterSection,
+                        fontWeight = FontWeight.W300,
+                        fontSize = 11.sp
+                    )
+                )
+            }
+        }
+
     }
 }
 
@@ -324,11 +346,18 @@ fun Badge(num: Int) {
 
 @Composable
 fun FilterOptionComponent(
-    iFilter: IFilter
+    iFilter: IFilter,
+    tagState: TagState,
+    typeState: TypeState,
+    amountState: AmountState
 ) {
-    val amountFilterState = remember { AmountState() }
-    val tagFilterState = remember { TagFilterState() }
-    val typeFilterState = remember { TypeFilterState() }
+    var amountFilterState = remember { AmountFilterState() }
+    var tagFilterState = remember { TagFilterState() }
+    var typeFilterState = remember { TypeFilterState() }
+    amountFilterState.value = amountState.value
+    tagFilterState.selectedOption = tagState.selectedOption
+    typeFilterState.selectedOption = typeState.selectedOption
+
     Box(backgroundColor = filter, modifier = Modifier.fillMaxWidth().fillMaxHeight()) {
         Column(
             modifier = Modifier.fillMaxWidth().weight(1f).padding(16.dp)
@@ -341,13 +370,15 @@ fun FilterOptionComponent(
                     shape = RoundedCornerShape(16.dp),
                     color = filter
                 ) {
-                    Icon(asset = Icons.Default.Close,
+                    Icon(
+                        asset = Icons.Default.Close,
                         tint = filterText,
                         modifier = Modifier.clickable(
                             onClick = {
                                 iFilter.fillerCancel()
-                            },indication = RippleIndication(bounded = true, radius = 16.dp)
-                        ))
+                            }, indication = RippleIndication(bounded = true, radius = 16.dp)
+                        )
+                    )
                 }
                 Text(
                     modifier = Modifier.weight(1f).padding(end = 16.dp),
@@ -365,7 +396,8 @@ fun FilterOptionComponent(
                     )
                 }
                 Slider(
-                    value = amountFilterState.value?.toFloat() ?: amountFilterState.max.toFloat(),
+                    value = amountFilterState.value?.toFloat()
+                        ?: amountFilterState.max.toFloat(),
                     valueRange = 0f..amountFilterState.max.toFloat(),
                     color = filterText,
                     onValueChange = { amountFilterState.value = it.toDouble() })
@@ -383,7 +415,7 @@ fun FilterOptionComponent(
                         tagState = tagFilterState,
                         typeState = typeFilterState
                     )
-                },indication = RippleIndication(bounded = true)),
+                }, indication = RippleIndication(bounded = true)),
             gravity = ContentGravity.Center,
             backgroundColor = filterText
         ) {
@@ -437,7 +469,7 @@ private fun FilterByTag(tags: List<String>, formState: TagFilterState) {
         verticalArrangement = Arrangement.SpaceBetween
     ) {
         tags.forEach { text ->
-            val selected = text == formState.selectedOption
+            val selected = formState.selectedOption.contains(text)
             Row(
                 modifier = Modifier.fillMaxWidth().padding(4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -448,7 +480,14 @@ private fun FilterByTag(tags: List<String>, formState: TagFilterState) {
                 )
                 Checkbox(
                     checked = selected,
-                    onCheckedChange = { formState.selectedOption = text })
+                    onCheckedChange = {
+                        if (formState.selectedOption.contains(text)) {
+                            formState.selectedOption.remove(text)
+                        } else {
+                            formState.selectedOption.add(text)
+                        }
+                    }
+                )
             }
         }
 
@@ -457,7 +496,10 @@ private fun FilterByTag(tags: List<String>, formState: TagFilterState) {
 
 @Composable
 private fun FilterHeaderLine(title: String) {
-    Row(verticalGravity = Alignment.CenterVertically, modifier = Modifier.padding(top = 16.dp)) {
+    Row(
+        verticalGravity = Alignment.CenterVertically,
+        modifier = Modifier.padding(top = 16.dp)
+    ) {
         Text(
             text = title,
             style = TextStyle(color = filterSection, fontWeight = FontWeight.W500),

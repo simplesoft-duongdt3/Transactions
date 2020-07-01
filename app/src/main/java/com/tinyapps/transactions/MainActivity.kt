@@ -37,12 +37,18 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mTransactionViewModel.getTransactions()
+        mTransactionViewModel.getTransactions(
+            type = "All",
+            tags = listOf(),
+            maxAmount = 2000.0
+        )
+
         setContent {
             val appState = remember { AppState(backPressHandler = backPressHandler) }
             val tagState = remember { TagState() }
             val typeState = remember { TypeState() }
             var amountState = remember { AmountState() }
+
             Scaffold(
                 floatingActionButton = {
                     if (!appState.openDialog) {
@@ -88,33 +94,41 @@ class MainActivity : AppCompatActivity() {
                                 )
                                 FilterComponent(appState)
 
-                                TransactionsComponent(mTransactionViewModel.transactionsLiveData,
-                                    tagState = tagState,
-                                    typeState = typeState,
-                                    amountState = amountState,
+                                TransactionsComponent(
+                                    mTransactionViewModel.transactionsLiveData,
                                     appState = appState
                                 )
                             }
                             if (appState.openDialog) {
-                                FilterOptionComponent(iFilter = object : IFilter {
-                                    override fun fillerResults(
-                                        amountFilterState: AmountState,
-                                        tagFilterState: TagFilterState,
-                                        typeFilterState: TypeFilterState
-                                    ) {
-                                        amountState = amountFilterState
-                                        tagState.selectedOption = tagFilterState.selectedOption
-                                        typeState.selectedOption =
-                                            typeFilterState.selectedOption
-                                        appState.updateOpenDialogFlag(false)
-                                    }
+                                FilterOptionComponent(
+                                    iFilter = object : IFilter {
+                                        override fun fillerResults(
+                                            amountFilterState: AmountFilterState,
+                                            tagFilterState: TagFilterState,
+                                            typeFilterState: TypeFilterState
+                                        ) {
+                                            appState.updateOpenDialogFlag(false)
+                                            tagState.selectedOption = tagFilterState.selectedOption
+                                            typeState.selectedOption =
+                                                typeFilterState.selectedOption
+                                            amountState.value = amountFilterState.value
+                                            mTransactionViewModel.getTransactions(
+                                                type = typeFilterState.selectedOption,
+                                                tags = tagFilterState.selectedOption,
+                                                maxAmount = amountFilterState.value
+                                                    ?: amountFilterState.max
+                                            )
+                                        }
 
-                                    override fun fillerCancel() {
-                                        Log.d("Tien", "fillerCancel ${appState.openDialog}")
-                                        appState.updateOpenDialogFlag(false)
-                                    }
+                                        override fun fillerCancel() {
+                                            Log.d("Tien", "fillerCancel ${appState.openDialog}")
+                                            appState.updateOpenDialogFlag(false)
+                                        }
 
-                                }
+                                    },
+                                    tagState = tagState,
+                                    typeState = typeState,
+                                    amountState = amountState
                                 )
                             }
 
@@ -130,7 +144,6 @@ class MainActivity : AppCompatActivity() {
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    val appState = remember { AppState(false, backPressHandler = BackPressHandler(false)) }
-    FilterComponent(appState = appState)
+    TransactionItem(it = Transaction())
 }
 

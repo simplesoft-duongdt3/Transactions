@@ -1,9 +1,7 @@
 package com.tinyapps.presentation.features.transactions.viewmodel
 
 import android.util.Log
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.liveData
 import androidx.lifecycle.viewModelScope
 import com.tinyapps.data.features.transactions.mapper.TransactionMapper
 import com.tinyapps.domain.base.usecase.UseCaseParams
@@ -11,8 +9,8 @@ import com.tinyapps.domain.features.transactions.usecase.GetTransactionsUseCase
 import com.tinyapps.presentation.base.AppDispatchers
 import com.tinyapps.presentation.base.BaseViewModel
 import com.tinyapps.presentation.features.transactions.model.Transaction
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 class TransactionViewModel(
     val transactionsUseCase: GetTransactionsUseCase,
@@ -21,15 +19,22 @@ class TransactionViewModel(
 ) : BaseViewModel() {
     val transactionsLiveData: MutableLiveData<List<Transaction>> = MutableLiveData()
 
-    fun getTransactions() =
+    fun getTransactions(type: String, tags : List<String>, maxAmount : Double) =
         viewModelScope.launch(appDispatchers.main) {
             val transactionResults = transactionsUseCase.execute(UseCaseParams.Empty)
             transactionResults.either({
                 transactionsLiveData.value = listOf()
-                Log.d("Tien","transactionResults Failure ${transactionsLiveData.value}")
+                Log.d("Tien", "transactionResults Failure ${transactionsLiveData.value}")
             }, { result ->
 //                transactionsLiveData.value = transactionListMapper.mapList(result.transactions)
-                transactionsLiveData.value = listOf(
+                val transactions = listOf(
+                    Transaction(),
+                    Transaction(),
+                    Transaction(),
+                    Transaction(),
+                    Transaction(),
+                    Transaction(),
+                    Transaction(),
                     Transaction(),
                     Transaction(),
                     Transaction(),
@@ -63,7 +68,19 @@ class TransactionViewModel(
                     Transaction(),
                     Transaction()
                 )
-                Log.d("Tien","transactionResults result ${transactionsLiveData.value}")
+                val listTransactions =
+                    when (type) {
+                        "Expenses" -> {
+                            transactions.filter { transaction -> (transaction.amount < 0 && abs(transaction.amount) < maxAmount) }
+                        }
+                        "Revenue" -> {
+                            transactions.filter { transaction -> (transaction.amount >= 0 && abs(transaction.amount) < maxAmount) }
+                        }
+                        else -> {
+                            transactions.filter { transaction -> abs(transaction.amount) < maxAmount }
+                        }
+                    }
+                transactionsLiveData.value = listTransactions
             })
         }
 
