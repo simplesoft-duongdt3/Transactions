@@ -184,7 +184,7 @@ fun TransactionItem(it: Transaction) {
                         fontWeight = FontWeight.W100
                     )
                 )
-                TransactionTags(tags = listOf("Food", "Drink", "Forex"))
+                TransactionTags(tags = it.tags)
             }
 
             Text(
