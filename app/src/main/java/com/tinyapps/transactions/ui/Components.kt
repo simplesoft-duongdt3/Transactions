@@ -1,9 +1,11 @@
 package com.tinyapps.transactions.ui
 
+import android.text.Editable
 import android.util.Log
 import androidx.compose.Composable
 import androidx.compose.getValue
 import androidx.compose.remember
+import androidx.compose.state
 import androidx.lifecycle.LiveData
 import androidx.ui.core.Alignment
 import androidx.ui.core.ContextAmbient
@@ -25,9 +27,12 @@ import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.filled.Close
 import androidx.ui.material.ripple.RippleIndication
 import androidx.ui.res.imageResource
+import androidx.ui.res.stringResource
+import androidx.ui.res.vectorResource
 import androidx.ui.text.TextStyle
 import androidx.ui.text.font.FontWeight
 import androidx.ui.text.style.TextAlign
+import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.TextUnit
 import androidx.ui.unit.dp
 import androidx.ui.unit.sp
@@ -39,6 +44,7 @@ import com.tinyapps.transactions.R
 import com.tinyapps.transactions.ui.listener.IFilter
 import com.tinyapps.transactions.ui.state.*
 import java.util.*
+import java.util.Locale.filter
 
 /**
  * Created by ChuTien on ${1/25/2017}.
@@ -57,7 +63,7 @@ fun HeaderComponent(enableDarkMode: Boolean, onCheckChanged: (Boolean) -> Unit) 
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Accounts",
+                text = stringResource(id = R.string.accounts),
                 style = TextStyle(
                     fontSize = 20.sp,
                     color = titleText,
@@ -271,7 +277,7 @@ fun FilterComponent(appState: AppState) {
         Stack(modifier = Modifier.wrapContentWidth().fillMaxHeight()) {
             Text(
                 modifier = Modifier.gravity(Alignment.CenterStart),
-                text = "Transaction history     ", style = TextStyle(
+                text = stringResource(id = R.string.transaction_history), style = TextStyle(
                     fontWeight = FontWeight.W300, fontSize = 16.sp, color = textPrimary
                 )
             )
@@ -382,7 +388,7 @@ fun FilterOptionComponent(
                 }
                 Text(
                     modifier = Modifier.weight(1f).padding(end = 16.dp),
-                    text = "Filters",
+                    text = stringResource(id = R.string.filters),
                     style = TextStyle(color = filterText, fontWeight = FontWeight.W700),
                     textAlign = TextAlign.Center
                 )
@@ -403,8 +409,8 @@ fun FilterOptionComponent(
                     onValueChange = { amountFilterState.value = it.toDouble() })
             }
 
-            FilterByType(listOf("All", "Revenue", "Expenses"), typeFilterState)
-            FilterHeaderLine("TAGS")
+            FilterByType(listOf(stringResource(id = R.string.all), stringResource(id = R.string.revenue), stringResource(id = R.string.expenses)), typeFilterState)
+            FilterHeaderLine(stringResource(id = R.string.tags))
             FilterByTag(tagsLiveData.value ?: listOf(), tagFilterState)
         }
         Box(
@@ -520,7 +526,7 @@ private fun EmptyView() {
         ) {
             Image(image)
             Text(
-                text = "Oh crap, you've\ngot nothing.",
+                text = stringResource(id = R.string.empty_title),
                 style = TextStyle(
                     color = Color.Black,
                     fontWeight = FontWeight.W700,
@@ -530,7 +536,7 @@ private fun EmptyView() {
             )
             Text(
                 modifier = Modifier.padding(bottom = 56.dp),
-                text = "Use add button to add transactions",
+                text = stringResource(id = R.string.empty_content),
                 style = TextStyle(
                     color = Color.Black,
                     fontWeight = FontWeight.W200,
@@ -540,4 +546,80 @@ private fun EmptyView() {
             )
         }
     }
+}
+
+@Composable
+fun AddTransaction() {
+    val image = vectorResource(id = R.drawable.ic_arrow_back)
+    val nameState by state { String }
+    VerticalScroller(modifier = Modifier.fillMaxWidth().fillMaxHeight()) {
+        Column() {
+            Row(
+                modifier = Modifier.fillMaxWidth().height(56.dp)
+                    .gravity(Alignment.CenterHorizontally),
+                verticalGravity = Alignment.CenterVertically
+            ) {
+                Image(
+                    asset = image,
+                    modifier = Modifier.width(40.dp).height(40.dp).padding(start = 8.dp, end = 8.dp)
+                )
+                Text(
+                    text = stringResource(id = R.string.add_transaction),
+                    modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        color = titleAddTransaction,
+                        textAlign = TextAlign.Center
+                    )
+                )
+            }
+
+            Spacer(modifier = Modifier.height(40.dp))
+            Box(backgroundColor = emptyBackground, modifier = Modifier.fillMaxWidth().fillMaxHeight()) {
+                Column(modifier = Modifier.padding(start = 40.dp).fillMaxWidth().weight(1f)) {
+                    Text(
+                        text = stringResource(id = R.string.name),
+                        style = TextStyle(color = titleAddTransaction, fontSize = 14.sp)
+                    )
+                    Text(
+                        text = stringResource(id = R.string.amount),
+                        style = TextStyle(color = titleAddTransaction, fontSize = 14.sp)
+                    )
+                    Text(
+                        text = stringResource(id = R.string.date),
+                        style = TextStyle(color = titleAddTransaction, fontSize = 14.sp)
+                    )
+                    Text(
+                        text = stringResource(id = R.string.description),
+                        style = TextStyle(color = titleAddTransaction, fontSize = 14.sp)
+                    )
+                    Text(
+                        text = stringResource(id = R.string.tags),
+                        style = TextStyle(color = titleAddTransaction, fontSize = 14.sp)
+                    )
+
+                }
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(50.dp)
+                        .clickable(onClick = {
+
+                        }, indication = RippleIndication(bounded = true)),
+                    gravity = ContentGravity.Center,
+                    backgroundColor = filter
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.add_transaction).toUpperCase(),
+                        style = TextStyle(fontSize = TextUnit.Sp(20), color = filterText)
+                    )
+                }
+            }
+        }
+    }
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun DefaultPreview() {
+    AddTransaction()
 }

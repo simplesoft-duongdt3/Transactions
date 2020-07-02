@@ -15,6 +15,7 @@ import androidx.ui.material.FloatingActionButton
 import androidx.ui.material.Scaffold
 import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.filled.Add
+import androidx.ui.res.stringResource
 import androidx.ui.tooling.preview.Preview
 import com.tinyapps.presentation.features.transactions.model.Transaction
 import com.tinyapps.presentation.features.transactions.model.Wallet
@@ -38,7 +39,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mTransactionViewModel.getTransactions(
-            type = "All",
+            type = stringResource(id = R.string.all),
             tags = listOf(),
             maxAmount = 2000.0
         )
@@ -100,7 +101,8 @@ class MainActivity : AppCompatActivity() {
                                 )
                             }
                             if (appState.openDialog) {
-                                FilterOptionComponent( tagsLiveData = mTransactionViewModel.tagsLiveData,
+                                FilterOptionComponent(
+                                    tagsLiveData = mTransactionViewModel.tagsLiveData,
                                     iFilter = object : IFilter {
                                         override fun fillerResults(
                                             amountFilterState: AmountFilterState,
@@ -144,6 +146,6 @@ class MainActivity : AppCompatActivity() {
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    TransactionItem(it = Transaction())
+    AddTransaction()
 }
 

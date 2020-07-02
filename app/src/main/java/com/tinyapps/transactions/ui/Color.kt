@@ -22,6 +22,7 @@ var gradientStart   = Color(0xFFF2F2F2)
 var gradientEnd   = Color(0xFFFDFDFD)
 val titleText   = Color(0xFF2E608C)
 val emptyBackground   = Color(0xFFFCFCFC)
+val titleAddTransaction   = Color(0xFF646464)
 
 val colors = listOf(
 Color(0xFFffd7d7.toInt()),
