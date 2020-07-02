@@ -11,6 +11,7 @@ import com.tinyapps.presentation.base.AppDispatchers
 import com.tinyapps.presentation.base.BaseViewModel
 import com.tinyapps.presentation.features.transactions.model.Transaction
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.abs
 
 class TransactionViewModel(
@@ -26,13 +27,15 @@ class TransactionViewModel(
 
     fun getTransactions(type: String, tags: List<String>, maxAmount: Double) =
         viewModelScope.launch(appDispatchers.main) {
-            val transactionResults = transactionsUseCase.execute(
-                GetTransactionsUseCaseParams(
-                    tags = tags,
-                    type = type,
-                    limitAmount = maxAmount
+            val transactionResults = withContext(appDispatchers.io) {
+                transactionsUseCase.execute(
+                    GetTransactionsUseCaseParams(
+                        tags = tags,
+                        type = type,
+                        limitAmount = maxAmount
+                    )
                 )
-            )
+            }
             transactionResults.either({
                 transactionsLiveData.value = listOf()
                 tagsLiveData.value = listOf()
