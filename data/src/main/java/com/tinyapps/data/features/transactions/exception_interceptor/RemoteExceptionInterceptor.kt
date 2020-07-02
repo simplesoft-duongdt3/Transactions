@@ -1,4 +1,4 @@
-package com.comicoth.remote.exception_interceptor
+package com.tinyapps.data.features.transactions.exception_interceptor
 
 import com.tinyapps.common_jvm.exception.ExceptionInterceptor
 import com.tinyapps.common_jvm.exception.Failure

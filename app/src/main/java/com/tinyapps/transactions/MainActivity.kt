@@ -55,6 +55,7 @@ class MainActivity : AppCompatActivity() {
                         FloatingActionButton(
                             onClick = {
                                 //todo open input form
+                                mTransactionViewModel.createTransaction()
                             },
                             backgroundColor = filter,
                             contentColor = Color.White
