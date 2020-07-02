@@ -11,5 +11,5 @@ data class Transaction(
     val amount: Double = Random.nextDouble(-2000.0, 2000.0),
     val date: Long = 1593070307028,
     val comment: String = comments[Random.nextInt(comments.size - 1)],
-    val tags: List<String> = listOf()
+    val tags: List<String> = arrayListOf()
 )

@@ -9,6 +9,8 @@ import androidx.ui.core.Alignment
 import androidx.ui.core.ContextAmbient
 import androidx.ui.core.Modifier
 import androidx.ui.foundation.*
+import androidx.ui.foundation.gestures.ScrollableState
+import androidx.ui.foundation.gestures.scrollable
 import androidx.ui.foundation.lazy.LazyColumnItems
 import androidx.ui.foundation.shape.corner.CircleShape
 import androidx.ui.foundation.shape.corner.RoundedCornerShape
@@ -343,6 +345,7 @@ fun Badge(num: Int) {
 
 @Composable
 fun FilterOptionComponent(
+    tagsLiveData: LiveData<List<String>>,
     iFilter: IFilter,
     tagState: TagState,
     typeState: TypeState,
@@ -402,7 +405,7 @@ fun FilterOptionComponent(
 
             FilterByType(listOf("All", "Revenue", "Expenses"), typeFilterState)
             FilterHeaderLine("TAGS")
-            FilterByTag(listOf("Fx", "Coin", "Food", "Drink"), tagFilterState)
+            FilterByTag(tagsLiveData.value ?: listOf(), tagFilterState)
         }
         Box(
             modifier = Modifier.fillMaxWidth().height(50.dp)
@@ -460,35 +463,33 @@ private fun FilterByType(options: List<String>, formState: TypeFilterState) {
 
 @Composable
 private fun FilterByTag(tags: List<String>, formState: TagFilterState) {
-    //todo Make tags can be multi choice
-    Column(
-        modifier = Modifier.fillMaxWidth() + Modifier.padding(top = 8.dp),
-        verticalArrangement = Arrangement.SpaceBetween
+    LazyColumnItems(
+        items = tags,
+        modifier = Modifier.fillMaxHeight().padding(8.dp)
     ) {
-        tags.forEach { text ->
-            val selected = formState.selectedOption.contains(text)
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = text,
-                    style = TextStyle(color = filterText, fontWeight = FontWeight.W500)
-                )
-                Checkbox(
-                    checked = selected,
-                    onCheckedChange = {
-                        if (formState.selectedOption.contains(text)) {
-                            formState.selectedOption.remove(text)
-                        } else {
-                            formState.selectedOption.add(text)
-                        }
+        val selected = formState.selectedOption.contains(it)
+        val text = it
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = text,
+                style = TextStyle(color = filterText, fontWeight = FontWeight.W500)
+            )
+            Checkbox(
+                checked = selected,
+                onCheckedChange = {
+                    if (formState.selectedOption.contains(text)) {
+                        formState.selectedOption.remove(text)
+                    } else {
+                        formState.selectedOption.add(text)
                     }
-                )
-            }
+                }
+            )
         }
-
     }
+
 }
 
 @Composable

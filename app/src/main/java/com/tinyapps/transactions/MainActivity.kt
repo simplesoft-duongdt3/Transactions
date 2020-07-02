@@ -100,7 +100,7 @@ class MainActivity : AppCompatActivity() {
                                 )
                             }
                             if (appState.openDialog) {
-                                FilterOptionComponent(
+                                FilterOptionComponent( tagsLiveData = mTransactionViewModel.tagsLiveData,
                                     iFilter = object : IFilter {
                                         override fun fillerResults(
                                             amountFilterState: AmountFilterState,
