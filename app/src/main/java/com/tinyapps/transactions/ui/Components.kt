@@ -2,11 +2,13 @@ package com.tinyapps.transactions.ui
 
 import android.text.Editable
 import android.util.Log
+import android.view.View
+import android.widget.Toast
+import androidx.annotation.LayoutRes
 import androidx.compose.*
+import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.LiveData
-import androidx.ui.core.Alignment
-import androidx.ui.core.ContextAmbient
-import androidx.ui.core.Modifier
+import androidx.ui.core.*
 import androidx.ui.foundation.*
 import androidx.ui.foundation.lazy.LazyColumnItems
 import androidx.ui.foundation.shape.corner.CircleShape
@@ -20,6 +22,7 @@ import androidx.ui.input.TextFieldValue
 import androidx.ui.input.VisualTransformation
 import androidx.ui.layout.*
 import androidx.ui.layout.ColumnScope.gravity
+import androidx.ui.layout.Constraints
 import androidx.ui.layout.RowScope.weight
 import androidx.ui.livedata.observeAsState
 import androidx.ui.material.*
@@ -33,11 +36,15 @@ import androidx.ui.text.TextRange
 import androidx.ui.text.TextStyle
 import androidx.ui.text.font.FontWeight
 import androidx.ui.text.style.TextAlign
+import androidx.ui.text.style.TextDecoration
 import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.Dp
 import androidx.ui.unit.TextUnit
 import androidx.ui.unit.dp
 import androidx.ui.unit.sp
+import androidx.ui.viewinterop.AndroidView
+import com.hootsuite.nachos.NachoTextView
+import com.hootsuite.nachos.terminator.ChipTerminatorHandler
 import com.tinyapps.common_jvm.extension.date.format
 import com.tinyapps.common_jvm.extension.number.format
 import com.tinyapps.common_jvm.extension.number.formatDateToString
@@ -47,8 +54,11 @@ import com.tinyapps.presentation.features.transactions.model.Wallet
 import com.tinyapps.transactions.R
 import com.tinyapps.transactions.ui.listener.IFilter
 import com.tinyapps.transactions.ui.state.*
+import org.koin.ext.scope
 import java.sql.Date
 import java.util.*
+import kotlin.math.absoluteValue
+
 
 /**
  * Created by ChuTien on ${1/25/2017}.
@@ -595,8 +605,46 @@ fun InputBox(
 }
 
 @Composable
+fun InputTagsBox(
+    width: Dp,
+    height: Dp,
+    transactionInputState: TransactionInputState
+) {
+
+    class FocusInputState(focused: Boolean = false) {
+        var focusInput = mutableStateOf(focused)
+    }
+
+    var tagsView: NachoTextView? = null
+
+    val focusState = remember { FocusInputState() }
+    Surface(
+        color = Color.White,
+        shape = RoundedCornerShape(4.dp),
+        border = Border(
+            1.dp,
+            if (focusState.focusInput.value) borderInputBoxFocused else borderInputBox
+        ),
+        modifier = Modifier.width(width).height(height)
+    ) {
+        AndroidView(resId = R.layout.view_chip) {
+            tagsView = it.findViewById(R.id.tags_view)
+            tagsView?.addChipTerminator('\n', ChipTerminatorHandler.BEHAVIOR_CHIPIFY_ALL)
+            tagsView?.addTextChangedListener {
+                Log.d("Tien Test", "addTextChangedListener = ${it}")
+                tagsView?.chipValues?.let { chipvalues -> transactionInputState.tags = chipvalues }
+            }
+        }
+    }
+
+
+}
+
+
+@Composable
 fun AddTransaction(transactionInputState: TransactionInputState) {
     val image = vectorResource(id = R.drawable.ic_arrow_back)
+    val tagState = remember { TagState() }
     Box {
         VerticalScroller(modifier = Modifier.fillMaxWidth().weight(1f)) {
             Column {
@@ -623,8 +671,8 @@ fun AddTransaction(transactionInputState: TransactionInputState) {
 
                 Spacer(modifier = Modifier.fillMaxWidth().height(40.dp))
                 Column(
-                    modifier = Modifier.padding(start = 40.dp).fillMaxWidth().fillMaxHeight(),
-                    verticalArrangement = Arrangement.SpaceBetween
+                    modifier = Modifier.padding(start = 80.dp).fillMaxWidth().fillMaxHeight(),
+                    verticalArrangement = Arrangement.SpaceEvenly
                 ) {
                     Text(
                         text = stringResource(id = R.string.name),
@@ -653,12 +701,12 @@ fun AddTransaction(transactionInputState: TransactionInputState) {
                         keyboardType = KeyboardType.Number,
                         imeAction = ImeAction.Next,
                         value = TextFieldValue(
-                            text = transactionInputState.amount.toString()
-                            , selection = TextRange(transactionInputState.amount.toString().length)
+                            text = if (transactionInputState.amount != 0f) transactionInputState.amount.toString() else ""
+                            , selection = TextRange(if (transactionInputState.amount != 0f) transactionInputState.amount.toString().length else 0)
                         ),
                         onvalueChange = { textFieldValue ->
                             transactionInputState.amount =
-                                textFieldValue.text.toDouble()
+                                textFieldValue.text.toFloat()
                         })
 
                     Text(
@@ -668,7 +716,7 @@ fun AddTransaction(transactionInputState: TransactionInputState) {
                     InputBox(
                         width = 100.dp,
                         height = 48.dp,
-                        keyboardType = KeyboardType.Number,
+                        keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Next,
                         value = TextFieldValue(
                             text = transactionInputState.date.formatDateToString()
@@ -686,7 +734,7 @@ fun AddTransaction(transactionInputState: TransactionInputState) {
                     InputBox(
                         width = 200.dp,
                         height = 80.dp,
-                        keyboardType = KeyboardType.Number,
+                        keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Next,
                         value = TextFieldValue(
                             text = transactionInputState.comment
@@ -700,6 +748,10 @@ fun AddTransaction(transactionInputState: TransactionInputState) {
                         text = stringResource(id = R.string.tags),
                         style = TextStyle(color = titleAddTransaction, fontSize = 14.sp)
                     )
+                    InputTagsBox(
+                        width = 200.dp,
+                        height = 56.dp, transactionInputState = transactionInputState
+                    )
 
                 }
 
@@ -708,7 +760,11 @@ fun AddTransaction(transactionInputState: TransactionInputState) {
         Box(
             modifier = Modifier.fillMaxWidth().height(50.dp)
                 .clickable(onClick = {
-
+                    Log.d(
+                        "Tien Test",
+                        "Name -> ${transactionInputState.name}\nAmount -> ${transactionInputState.amount}\nDate -> ${transactionInputState.date}\nDescription -> ${transactionInputState.comment}" +
+                                "Tags -> ${transactionInputState.tags}"
+                    )
                 }, indication = RippleIndication(bounded = true)),
             gravity = ContentGravity.Center,
             backgroundColor = filter
