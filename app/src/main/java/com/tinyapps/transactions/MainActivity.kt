@@ -39,7 +39,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mTransactionViewModel.getTransactions(
-            type = stringResource(id = R.string.all),
+            type = getString(R.string.all),
             tags = listOf(),
             maxAmount = 2000.0
         )
@@ -146,6 +146,7 @@ class MainActivity : AppCompatActivity() {
 @Preview(showBackground = true)
 @Composable
 fun DefaultPreview() {
-    AddTransaction()
+    var transactionInputState = remember { TransactionInputState() }
+    AddTransaction(transactionInputState)
 }
 
