@@ -9,7 +9,7 @@ import androidx.compose.setValue
  */
 class TransactionInputState(
     name: String = "",
-    amount: Float = 0f,
+    amount: Double = 0.0,
     date: Long = 0,
     comment: String = "",
     tags: List<String> = arrayListOf()
