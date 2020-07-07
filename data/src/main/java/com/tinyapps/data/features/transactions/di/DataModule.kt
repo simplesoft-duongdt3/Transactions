@@ -1,13 +1,15 @@
 package com.tinyapps.data.features.transactions.di
 
-import com.comicoth.remote.exception_interceptor.RemoteExceptionInterceptor
+import com.tinyapps.data.features.transactions.exception_interceptor.RemoteExceptionInterceptor
 import com.tinyapps.data.features.transactions.mapper.TransactionListMapper
 import com.tinyapps.data.features.transactions.repository.TransactionRepositoryImpl
+import com.tinyapps.data.features.transactions.services.CreateTransactionApiService
 import com.tinyapps.data.features.transactions.services.TransactionApiService
 import com.tinyapps.domain.features.transactions.repository.TransactionRepository
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import org.koin.core.scope.Scope
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -33,22 +35,32 @@ val dataModule = module {
             .build()
     }
 
-    single {
-        Retrofit.Builder()
-            .client(get())
-            .baseUrl("https://spreadsheets.google.com")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-    }
+    factory<TransactionApiService> { createRetrofitWithGson("https://spreadsheets.google.com").create(TransactionApiService::class.java) }
 
-    factory { get<Retrofit>().create(TransactionApiService::class.java) }
-
+    factory<CreateTransactionApiService> { createRetrofit("https://docs.google.com").create(CreateTransactionApiService::class.java) }
 
     single<TransactionRepository> {
         TransactionRepositoryImpl(
             transactionApiService = get(),
+            createTransactionApiService = get(),
+            remoteExceptionInterceptor = get(),
             transactionListMapper = get()
         )
     }
     single { RemoteExceptionInterceptor() }
+}
+
+private fun Scope.createRetrofitWithGson(baseUrl: String): Retrofit {
+    return Retrofit.Builder()
+        .client(get())
+        .baseUrl(baseUrl)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+}
+
+private fun Scope.createRetrofit(baseUrl: String): Retrofit {
+    return Retrofit.Builder()
+        .client(get())
+        .baseUrl(baseUrl)
+        .build()
 }

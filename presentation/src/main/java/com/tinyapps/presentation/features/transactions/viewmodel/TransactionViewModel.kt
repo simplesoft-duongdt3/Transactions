@@ -5,23 +5,48 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.tinyapps.data.features.transactions.mapper.TagListMapper
 import com.tinyapps.data.features.transactions.mapper.TransactionMapper
+import com.tinyapps.domain.features.transactions.usecase.CreateTransactionUseCase
+import com.tinyapps.domain.features.transactions.usecase.CreateTransactionUseCaseParams
 import com.tinyapps.domain.features.transactions.usecase.GetTransactionsUseCase
 import com.tinyapps.domain.features.transactions.usecase.GetTransactionsUseCaseParams
 import com.tinyapps.presentation.base.AppDispatchers
 import com.tinyapps.presentation.base.BaseViewModel
 import com.tinyapps.presentation.features.transactions.model.Transaction
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.util.*
 import kotlin.math.abs
 
 class TransactionViewModel(
     val transactionsUseCase: GetTransactionsUseCase,
+    val createTransactionUseCase: CreateTransactionUseCase,
     val appDispatchers: AppDispatchers,
     val tagListMapper: TagListMapper,
     val transactionListMapper: TransactionMapper
 ) : BaseViewModel() {
     val transactionsLiveData: MutableLiveData<List<Transaction>> = MutableLiveData()
 
+    fun createTransaction() =
+        viewModelScope.launch(appDispatchers.main) {
+            val createTransactionResult = withContext(appDispatchers.io) {
+                createTransactionUseCase.execute(
+                    CreateTransactionUseCaseParams(
+                        tags = listOf("tag12", "tag13", "tag14"),
+                        date = Date(),
+                        amount = 10198.0,
+                        description = "Test thử xem nào",
+                        name = "Buy a girl test lần final"
+                    )
+                )
+            }
+
+            createTransactionResult.either({
+                Log.d("Tien", "createTransactionResult Failure ${it}")
+            }, { result ->
+                Log.d("Tien", "createTransactionResult Success ${result}")
+            })
+        }
     val tagsLiveData: MutableLiveData<List<String>> = MutableLiveData()
 
 

@@ -13,6 +13,7 @@ val presentationModule = module {
         TransactionViewModel(
             transactionsUseCase = get(),
             appDispatchers = get(),
+            createTransactionUseCase = get(),
             transactionListMapper = get(),
             tagListMapper = get()
         )
