@@ -10,4 +10,5 @@ import androidx.compose.setValue
  */
 class TagState (selectedOption : ModelList<String> = ModelList()){
     var selectedOption by mutableStateOf(selectedOption)
+
 }
