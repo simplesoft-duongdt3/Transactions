@@ -1,5 +1,8 @@
 package com.tinyapps.common_jvm.extension.number
 
+import com.tinyapps.common_jvm.extension.date.format
+import com.tinyapps.common_jvm.extension.date.formatDateDDMMYYYY
+import com.tinyapps.common_jvm.extension.date.toCalendar
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.*
@@ -23,4 +26,11 @@ fun Float.format(): String {
 
 fun Long.format(): String {
     return numberFormat.format(this)
+}
+
+fun Long.formatDateToString(): String {
+    val cal = Calendar.getInstance()
+    cal.timeInMillis = this
+    val date = cal.time
+    return date.format("DD/MM/yyyy")
 }
