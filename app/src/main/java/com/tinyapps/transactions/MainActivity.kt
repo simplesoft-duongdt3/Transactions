@@ -2,6 +2,7 @@ package com.tinyapps.transactions
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.Composable
 import androidx.compose.remember
@@ -104,7 +105,7 @@ class MainActivity : AppCompatActivity() {
                                     tagsLiveData = mTransactionViewModel.tagsLiveData,
                                     iFilter = object : IFilter {
                                         override fun fillerResults(
-                                            amountState: AmountFilterState,
+                                            amountFilterState: AmountFilterState,
                                             tagFilterState: TagFilterState,
                                             typeFilterState: TypeFilterState
                                         ) {
@@ -112,12 +113,11 @@ class MainActivity : AppCompatActivity() {
                                             tagState.selectedOption = tagFilterState.selectedOption
                                             typeState.selectedOption =
                                                 typeFilterState.selectedOption
-                                            amountState.value = amountState.value
-                                            mTransactionViewModel.getTransactions(
-                                                type = typeFilterState.selectedOption,
-                                                tags = tagFilterState.selectedOption,
-                                                maxAmount = amountState.value
-                                                    ?: amountState.max
+                                            amountState.value = amountFilterState.value
+                                            getTransaction(
+                                                typeState = typeState,
+                                                tagState = tagState,
+                                                amountState = amountState
                                             )
                                         }
 
@@ -137,7 +137,35 @@ class MainActivity : AppCompatActivity() {
                                 TransactionInputBox(
                                     supportFragmentManager = supportFragmentManager,
                                     transactionInputState = transactionInputState,
-                                    appState = appState
+                                    appState = appState,
+                                    transactionResult = { transaction ->
+                                        run {
+                                            mTransactionViewModel.createTransaction(
+                                                transaction = transaction,
+                                                result = {
+                                                    if (it) {
+                                                        appState.updateTransactionInputFlag(false)
+                                                        Toast.makeText(
+                                                            this@MainActivity,
+                                                            "TRANSACTION SAVED",
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
+                                                        getTransaction(
+                                                            typeState = typeState,
+                                                            tagState = tagState,
+                                                            amountState = amountState
+                                                        )
+                                                    } else {
+                                                        Toast.makeText(
+                                                            this@MainActivity,
+                                                            "ERROR SEND TRANSACTION",
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
+                                                    }
+                                                })
+                                        }
+                                    }
+
                                 )
                             }
 
@@ -147,6 +175,19 @@ class MainActivity : AppCompatActivity() {
             )
 
         }
+    }
+
+    private fun getTransaction(
+        typeState: TypeState,
+        tagState: TagState,
+        amountState: AmountState
+    ) {
+        mTransactionViewModel.getTransactions(
+            type = typeState.selectedOption,
+            tags = tagState.selectedOption,
+            maxAmount = amountState.value
+                ?: amountState.max
+        )
     }
 }
 
