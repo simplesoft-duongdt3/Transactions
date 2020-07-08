@@ -1,7 +1,10 @@
 package com.tinyapps.common_jvm.extension.string
 
+import com.tinyapps.common_jvm.extension.nullable.defaultZero
+import java.text.DateFormat
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
+import java.text.SimpleDateFormat
 import java.util.*
 
 /**
@@ -14,6 +17,9 @@ val numberFormat = DecimalFormat("#,##0", DecimalFormatSymbols.getInstance(Local
     decimalSeparator = '.'
 })
 
+@Suppress("SimpleDateFormat")
+val dateFormat = SimpleDateFormat("dd/MM/yyyy")
+
 /**
  * Get list tags from json String from Transaction API
  */
@@ -22,8 +28,7 @@ fun String.toListTags() : List<String>{
 }
 
 fun String.toDateLong() : Long{
-    val cal = Calendar.getInstance()
-    return cal.timeInMillis
+    return dateFormat.parse(this).time.defaultZero()
 }
 
 fun String.moneyToDouble() : Double{
