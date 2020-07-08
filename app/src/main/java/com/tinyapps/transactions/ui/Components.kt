@@ -602,7 +602,7 @@ fun DateBox(
     supportFragmentManager: FragmentManager,
     width: Dp,
     height: Dp,
-    dateResult : (Long) ->Unit
+    dateResult: (Long) -> Unit
 ) {
     var dateText by state { String() }
     Surface(
@@ -691,9 +691,9 @@ fun TransactionInputBox(
     transactionResult: (Transaction) -> Unit
 ) {
     val image = vectorResource(id = R.drawable.ic_arrow_back)
-    val nameInput = state{ TextFieldValue("")}
-    val amountInput = state{ TextFieldValue("")}
-    val descriptionInput = state{ TextFieldValue("")}
+    val nameInput = state { TextFieldValue("") }
+    val amountInput = state { TextFieldValue("") }
+    val descriptionInput = state { TextFieldValue("") }
     val styleTitleText =
         TextStyle(color = titleAddTransaction, fontSize = 13.sp, fontWeight = FontWeight.W500)
     Box(backgroundColor = emptyBackground) {
@@ -707,7 +707,7 @@ fun TransactionInputBox(
                     Image(
                         asset = image,
                         modifier = Modifier.width(40.dp).height(40.dp)
-                            .padding(8.dp).clickable(onClick = {
+                            .padding(start = 16.dp, top = 8.dp, bottom = 8.dp).clickable(onClick = {
                                 appState.updateTransactionInputFlag(false)
                             })
                     )
@@ -716,7 +716,7 @@ fun TransactionInputBox(
                         modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(end = 40.dp),
                         style = TextStyle(
                             fontSize = 18.sp,
-                            fontWeight = FontWeight.W300,
+                            fontWeight = FontWeight.W400,
                             color = titleAddTransaction,
                             textAlign = TextAlign.Center
                         )
@@ -753,11 +753,8 @@ fun TransactionInputBox(
                         imeAction = ImeAction.Next,
                         value = amountInput.value,
                         onvalueChange = { textFieldValue ->
-                            if (textFieldValue.text.isNotEmpty()) {
-                                amountInput.value =
-                                    textFieldValue
-                            }
-
+                            amountInput.value =
+                                textFieldValue
                         })
 
                     Text(

@@ -1,4 +1,4 @@
-package com.tinyapps.data.features.transactions.mapper
+package com.tinyapps.presentation.mapper
 
 import com.tinyapps.common_jvm.mapper.Mapper
 import com.tinyapps.presentation.features.transactions.model.Transaction
