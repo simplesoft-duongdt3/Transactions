@@ -3,10 +3,6 @@ package com.tinyapps.transactions
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
-import androidx.animation.FastOutLinearInEasing
-import androidx.animation.FloatPropKey
-import androidx.animation.Infinite
-import androidx.animation.transitionDefinition
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.Composable
 import androidx.compose.remember
@@ -229,24 +225,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private val angle = FloatPropKey()
-    private val transDef = transitionDefinition {
-        state("start") {
-            this[angle] = 0f
-        }
-        state("end") {
-            this[angle] = 360f
-        }
-        transition("start" to "end") {
-            angle using repeatable {
-                animation = tween {
-                    duration = 3000
-                    easing = FastOutLinearInEasing
-                }
-                iterations = Infinite
-            }
-        }
-    }
 
     private fun getTransaction(
         typeState: TypeState,
