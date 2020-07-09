@@ -1,5 +1,8 @@
 package com.tinyapps.data.features.transactions.di
 
+import com.chuckerteam.chucker.api.ChuckerCollector
+import com.chuckerteam.chucker.api.ChuckerInterceptor
+import com.chuckerteam.chucker.api.RetentionManager
 import com.tinyapps.data.features.transactions.exception_interceptor.RemoteExceptionInterceptor
 import com.tinyapps.data.features.transactions.mapper.TransactionListMapper
 import com.tinyapps.data.features.transactions.repository.TransactionRepositoryImpl
@@ -25,19 +28,41 @@ val dataModule = module {
             level = HttpLoggingInterceptor.Level.BODY
         }
     }
-
     factory {
+        val chuckerCollector = ChuckerCollector(
+            context = get(),
+            // Toggles visibility of the push notification
+            showNotification = true,
+            // Allows to customize the retention period of collected data
+            retentionPeriod = RetentionManager.Period.ONE_HOUR
+        )
+        val chuckerInterceptor = ChuckerInterceptor(
+            context = get(),
+            collector = chuckerCollector,
+            maxContentLength = 250000L,
+            headersToRedact = setOf("Auth-Token")
+        )
+
         OkHttpClient.Builder()
             .addInterceptor(get<Interceptor>())
+            .addInterceptor(chuckerInterceptor)
             .connectTimeout(30, TimeUnit.SECONDS)
             .readTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(60, TimeUnit.SECONDS)
             .build()
     }
 
-    factory<TransactionApiService> { createRetrofitWithGson("https://spreadsheets.google.com").create(TransactionApiService::class.java) }
+    factory<TransactionApiService> {
+        createRetrofitWithGson("https://spreadsheets.google.com").create(
+            TransactionApiService::class.java
+        )
+    }
 
-    factory<CreateTransactionApiService> { createRetrofit("https://docs.google.com").create(CreateTransactionApiService::class.java) }
+    factory<CreateTransactionApiService> {
+        createRetrofit("https://docs.google.com").create(
+            CreateTransactionApiService::class.java
+        )
+    }
 
     single<TransactionRepository> {
         TransactionRepositoryImpl(
