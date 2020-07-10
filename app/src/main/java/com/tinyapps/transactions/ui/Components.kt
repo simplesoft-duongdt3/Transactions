@@ -2,7 +2,6 @@ package com.tinyapps.transactions.ui
 
 import android.util.Log
 import androidx.compose.*
-import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LiveData
 import androidx.ui.core.Alignment
@@ -28,25 +27,18 @@ import androidx.ui.material.icons.filled.Close
 import androidx.ui.material.ripple.RippleIndication
 import androidx.ui.res.imageResource
 import androidx.ui.res.stringResource
-import androidx.ui.res.vectorResource
-import androidx.ui.text.TextRange
 import androidx.ui.text.TextStyle
 import androidx.ui.text.font.FontWeight
 import androidx.ui.text.style.TextAlign
+import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.Dp
 import androidx.ui.unit.TextUnit
 import androidx.ui.unit.dp
 import androidx.ui.unit.sp
-import androidx.ui.viewinterop.AndroidView
 import com.google.android.material.datepicker.MaterialDatePicker
-import com.hootsuite.nachos.NachoTextView
-import com.hootsuite.nachos.terminator.ChipTerminatorHandler
 import com.tinyapps.common_jvm.extension.date.format
-import com.tinyapps.common_jvm.extension.date.toDate
 import com.tinyapps.common_jvm.extension.nullable.defaultZero
 import com.tinyapps.common_jvm.extension.number.format
-import com.tinyapps.common_jvm.extension.string.moneyToDouble
-import com.tinyapps.common_jvm.extension.string.toDateLong
 import com.tinyapps.presentation.features.transactions.model.Transaction
 import com.tinyapps.presentation.features.transactions.model.Wallet
 import com.tinyapps.transactions.R
@@ -563,6 +555,7 @@ private fun EmptyView() {
 
 @Composable
 fun InputBox(
+    label: String,
     keyboardType: KeyboardType = KeyboardType.Text,
     imeAction: ImeAction = ImeAction.Next,
     width: Dp,
@@ -578,13 +571,15 @@ fun InputBox(
     Surface(
         color = Color.White,
         shape = RoundedCornerShape(4.dp),
-        border = Border(
-            1.dp,
-            if (focusState.focusInput.value) borderInputBoxFocused else borderInputBox
-        ),
         modifier = Modifier.width(width).height(height)
     ) {
-        TextField(
+        OutlinedTextField(
+            label = {
+                Text(
+                    text = label,
+                    style = styleTitleText
+                )
+            },
             textStyle = TextStyle(textAlign = TextAlign.Start, fontSize = 14.sp),
             modifier = Modifier.gravity(align = Alignment.CenterHorizontally).padding(2.dp),
             onFocusChange = { focused -> focusState.focusInput.value = focused },
@@ -592,7 +587,7 @@ fun InputBox(
             imeAction = imeAction,
             value = value,
             onValueChange = onvalueChange,
-            cursorColor = borderInputBox
+            activeColor = borderInputBoxFocused
         )
     }
 }
@@ -644,184 +639,12 @@ fun DateBox(
     }
 }
 
+
+
+
+
+
+@Preview
 @Composable
-fun InputTagsBox(
-    width: Dp,
-    height: Dp,
-    transactionInputState: TransactionInputState
-) {
-
-    class FocusInputState(focused: Boolean = false) {
-        var focusInput = mutableStateOf(focused)
-    }
-
-    var tagsView: NachoTextView?
-
-    val focusState = remember { FocusInputState() }
-    Surface(
-        color = Color.White,
-        shape = RoundedCornerShape(4.dp),
-        border = Border(
-            1.dp,
-            if (focusState.focusInput.value) borderInputBoxFocused else borderInputBox
-        ),
-        modifier = Modifier.width(width).height(height)
-    ) {
-        AndroidView(resId = R.layout.view_chip) {
-            tagsView = it.findViewById(R.id.tags_view)
-            tagsView?.addChipTerminator('\n', ChipTerminatorHandler.BEHAVIOR_CHIPIFY_ALL)
-            tagsView?.addTextChangedListener { editable ->
-                Log.d("Tien Test", "addTextChangedListener = $editable")
-                tagsView?.chipValues?.let { chipvalues -> transactionInputState.tags = chipvalues }
-            }
-            tagsView?.setOnFocusChangeListener { _, hasFocus ->
-                focusState.focusInput.value = hasFocus
-            }
-        }
-    }
-
-}
-
-
-@Composable
-fun TransactionInputBox(
-    supportFragmentManager: FragmentManager,
-    appState: AppState,
-    transactionInputState: TransactionInputState,
-    transactionResult: (Transaction) -> Unit
-) {
-    val image = vectorResource(id = R.drawable.ic_arrow_back)
-    val nameInput = state { TextFieldValue("") }
-    val amountInput = state { TextFieldValue("") }
-    val descriptionInput = state { TextFieldValue("") }
-    val styleTitleText =
-        TextStyle(color = titleAddTransaction, fontSize = 13.sp, fontWeight = FontWeight.W500)
-    Box(backgroundColor = emptyBackground) {
-        VerticalScroller(modifier = Modifier.fillMaxWidth().weight(1f)) {
-            Column {
-                Row(
-                    modifier = Modifier.fillMaxWidth().height(56.dp)
-                        .gravity(Alignment.CenterHorizontally),
-                    verticalGravity = Alignment.CenterVertically
-                ) {
-                    Image(
-                        asset = image,
-                        modifier = Modifier.width(40.dp).height(40.dp)
-                            .padding(start = 16.dp, top = 8.dp, bottom = 8.dp).clickable(onClick = {
-                                appState.updateTransactionInputFlag(false)
-                            })
-                    )
-                    Text(
-                        text = stringResource(id = R.string.add_transaction),
-                        modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(end = 40.dp),
-                        style = TextStyle(
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.W400,
-                            color = titleAddTransaction,
-                            textAlign = TextAlign.Center
-                        )
-                    )
-                }
-
-                Spacer(modifier = Modifier.fillMaxWidth().height(40.dp))
-                Column(
-                    modifier = Modifier.padding(start = 80.dp).fillMaxWidth().fillMaxHeight(),
-                    verticalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.name),
-                        style = styleTitleText
-                    )
-                    InputBox(
-                        width = 200.dp,
-                        height = 48.dp,
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Next,
-                        value = nameInput.value,
-                        onvalueChange = { textFieldValue ->
-                            nameInput.value = textFieldValue
-                        })
-
-                    Text(
-                        text = stringResource(id = R.string.amount),
-                        style = styleTitleText
-                    )
-                    InputBox(
-                        width = 100.dp,
-                        height = 48.dp,
-                        keyboardType = KeyboardType.Number,
-                        imeAction = ImeAction.Next,
-                        value = amountInput.value,
-                        onvalueChange = { textFieldValue ->
-                            amountInput.value =
-                                textFieldValue
-                        })
-
-                    Text(
-                        text = stringResource(id = R.string.date),
-                        style = styleTitleText
-                    )
-                    DateBox(
-                        supportFragmentManager = supportFragmentManager,
-                        width = 200.dp,
-                        height = 48.dp,
-                        dateResult = {
-                            transactionInputState.date = it
-                        }
-                    )
-                    Text(
-                        text = stringResource(id = R.string.description),
-                        style = styleTitleText
-                    )
-                    InputBox(
-                        width = 200.dp,
-                        height = 80.dp,
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Next,
-                        value = descriptionInput.value,
-                        onvalueChange = { textFieldValue ->
-                            descriptionInput.value =
-                                textFieldValue
-                        })
-                    Text(
-                        text = stringResource(id = R.string.tags),
-                        style = styleTitleText
-                    )
-                    InputTagsBox(
-                        width = 200.dp,
-                        height = 56.dp, transactionInputState = transactionInputState
-                    )
-
-                }
-
-            }
-        }
-        Box(
-            modifier = Modifier.fillMaxWidth().height(50.dp)
-                .clickable(onClick = {
-                    Log.d(
-                        "Tien Test",
-                        "Name -> ${nameInput}\nAmount -> ${amountInput}\nDate -> " +
-                                "${transactionInputState.date}\nDescription -> ${descriptionInput}" +
-                                "Tags -> ${transactionInputState.tags}"
-                    )
-                    transactionResult(
-                        Transaction(
-                            name = nameInput.value.text,
-                            amount = amountInput.value.text.moneyToDouble(),
-                            tags = transactionInputState.tags,
-                            date = transactionInputState.date,
-                            comment = descriptionInput.value.text
-                        )
-                    )
-                }, indication = RippleIndication(bounded = true)),
-            gravity = ContentGravity.Center,
-            backgroundColor = filter
-        ) {
-            Text(
-                text = stringResource(id = R.string.add_transaction).toUpperCase(Locale.getDefault()),
-                style = TextStyle(fontSize = TextUnit.Sp(20), color = filterText)
-            )
-        }
-    }
+fun preView() {
 }

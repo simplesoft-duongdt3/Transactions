@@ -7,8 +7,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.Composable
 import androidx.compose.remember
 import androidx.compose.state
+import androidx.fragment.app.FragmentTransaction
 import androidx.ui.animation.Crossfade
 import androidx.ui.core.Alignment
+import androidx.ui.core.ContextAmbient
 import androidx.ui.core.Modifier
 import androidx.ui.core.setContent
 import androidx.ui.foundation.Box
@@ -24,6 +26,7 @@ import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.filled.Add
 import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.dp
+import com.tinyapps.presentation.features.transactions.model.Transaction
 import com.tinyapps.presentation.features.transactions.model.Wallet
 import com.tinyapps.presentation.features.transactions.viewmodel.TransactionViewModel
 import com.tinyapps.transactions.ui.*
@@ -55,14 +58,28 @@ class MainActivity : AppCompatActivity() {
             val tagState = remember { TagState() }
             val typeState = remember { TypeState() }
             val amountState = remember { AmountState() }
-            val transactionInputState = remember { TransactionInputState() }
 
             Scaffold(
                 floatingActionButton = {
                     if (!appState.isShowDialog && !appState.isShowTransactionInput) {
                         FloatingActionButton(
                             onClick = {
-                                appState.updateTransactionInputFlag(true)
+                                val transactionInputFragment = TransactionInputFragment()
+                                transactionInputFragment.callbackResult =
+                                    object : TransactionInputFragment.CallbackResult {
+                                        override fun sendResult(requestCode: Int, obj: Any) {
+                                            appState.isLoading = true
+                                            mTransactionViewModel.createTransaction(
+                                                transaction = obj as Transaction,
+                                                result = {
+                                                    appState.isLoading = false
+                                                })
+                                        }
+                                    }
+                                val transition = supportFragmentManager.beginTransaction()
+                                transition.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                                transition.add(android.R.id.content, transactionInputFragment)
+                                    .addToBackStack(null).commit()
                             },
                             backgroundColor = filter,
                             contentColor = Color.White
@@ -166,48 +183,6 @@ class MainActivity : AppCompatActivity() {
 
                             }
 
-                            if (appState.isShowTransactionInput) {
-                                Crossfade(current = currentFocus) {
-                                    TransactionInputBox(
-                                        supportFragmentManager = supportFragmentManager,
-                                        transactionInputState = transactionInputState,
-                                        appState = appState,
-                                        transactionResult = { transaction ->
-                                            run {
-                                                appState.isLoading = true
-                                                mTransactionViewModel.createTransaction(
-                                                    transaction = transaction,
-                                                    result = {
-                                                        if (it) {
-                                                            appState.updateTransactionInputFlag(
-                                                                false
-                                                            )
-                                                            Toast.makeText(
-                                                                this@MainActivity,
-                                                                "TRANSACTION SAVED",
-                                                                Toast.LENGTH_SHORT
-                                                            ).show()
-                                                            getTransaction(
-                                                                typeState = typeState,
-                                                                tagState = tagState,
-                                                                amountState = amountState
-                                                            )
-                                                        } else {
-                                                            Toast.makeText(
-                                                                this@MainActivity,
-                                                                "ERROR SEND TRANSACTION",
-                                                                Toast.LENGTH_SHORT
-                                                            ).show()
-                                                        }
-                                                        appState.isLoading = false
-                                                    })
-                                            }
-                                        }
-
-                                    )
-                                }
-
-                            }
                             if (appState.isLoading) {
                                 Box(
                                     modifier = Modifier.fillMaxSize()
