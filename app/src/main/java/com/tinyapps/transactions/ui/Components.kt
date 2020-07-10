@@ -42,9 +42,11 @@ import com.google.android.material.datepicker.MaterialDatePicker
 import com.hootsuite.nachos.NachoTextView
 import com.hootsuite.nachos.terminator.ChipTerminatorHandler
 import com.tinyapps.common_jvm.extension.date.format
+import com.tinyapps.common_jvm.extension.date.toDate
 import com.tinyapps.common_jvm.extension.nullable.defaultZero
 import com.tinyapps.common_jvm.extension.number.format
 import com.tinyapps.common_jvm.extension.string.moneyToDouble
+import com.tinyapps.common_jvm.extension.string.toDateLong
 import com.tinyapps.presentation.features.transactions.model.Transaction
 import com.tinyapps.presentation.features.transactions.model.Wallet
 import com.tinyapps.transactions.R
@@ -599,7 +601,8 @@ fun InputBox(
 fun DateBox(
     supportFragmentManager: FragmentManager,
     width: Dp,
-    height: Dp
+    height: Dp,
+    dateResult: (Long) -> Unit
 ) {
     var dateText by state { String() }
     Surface(
@@ -622,7 +625,7 @@ fun DateBox(
                 calendar.time = Date(it)
                 dateText = "${calendar.get(Calendar.DAY_OF_MONTH)}/" +
                         "${calendar.get(Calendar.MONTH) + 1}/${calendar.get(Calendar.YEAR)}"
-
+                dateResult(it)
             }
 
             datePicker.show(supportFragmentManager, "DatePicker")
@@ -683,10 +686,14 @@ fun InputTagsBox(
 @Composable
 fun TransactionInputBox(
     supportFragmentManager: FragmentManager,
+    appState: AppState,
     transactionInputState: TransactionInputState,
-    appState: AppState
+    transactionResult: (Transaction) -> Unit
 ) {
     val image = vectorResource(id = R.drawable.ic_arrow_back)
+    val nameInput = state { TextFieldValue("") }
+    val amountInput = state { TextFieldValue("") }
+    val descriptionInput = state { TextFieldValue("") }
     val styleTitleText =
         TextStyle(color = titleAddTransaction, fontSize = 13.sp, fontWeight = FontWeight.W500)
     Box(backgroundColor = emptyBackground) {
@@ -700,7 +707,7 @@ fun TransactionInputBox(
                     Image(
                         asset = image,
                         modifier = Modifier.width(40.dp).height(40.dp)
-                            .padding(8.dp).clickable(onClick = {
+                            .padding(start = 16.dp, top = 8.dp, bottom = 8.dp).clickable(onClick = {
                                 appState.updateTransactionInputFlag(false)
                             })
                     )
@@ -709,7 +716,7 @@ fun TransactionInputBox(
                         modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(end = 40.dp),
                         style = TextStyle(
                             fontSize = 18.sp,
-                            fontWeight = FontWeight.W300,
+                            fontWeight = FontWeight.W400,
                             color = titleAddTransaction,
                             textAlign = TextAlign.Center
                         )
@@ -730,12 +737,9 @@ fun TransactionInputBox(
                         height = 48.dp,
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Next,
-                        value = TextFieldValue(
-                            text = transactionInputState.name,
-                            selection = TextRange(transactionInputState.name.length)
-                        ),
+                        value = nameInput.value,
                         onvalueChange = { textFieldValue ->
-                            transactionInputState.name = textFieldValue.text
+                            nameInput.value = textFieldValue
                         })
 
                     Text(
@@ -747,19 +751,10 @@ fun TransactionInputBox(
                         height = 48.dp,
                         keyboardType = KeyboardType.Number,
                         imeAction = ImeAction.Next,
-                        value = TextFieldValue(
-                            text = transactionInputState.amount.defaultZero().format(),
-                            selection = TextRange(
-                                transactionInputState.amount.defaultZero()
-                                    .format().length
-                            )
-                        ),
+                        value = amountInput.value,
                         onvalueChange = { textFieldValue ->
-                            if (textFieldValue.text.isNotEmpty()) {
-                                transactionInputState.amount =
-                                    textFieldValue.text.moneyToDouble()
-                            }
-
+                            amountInput.value =
+                                textFieldValue
                         })
 
                     Text(
@@ -769,7 +764,10 @@ fun TransactionInputBox(
                     DateBox(
                         supportFragmentManager = supportFragmentManager,
                         width = 200.dp,
-                        height = 48.dp
+                        height = 48.dp,
+                        dateResult = {
+                            transactionInputState.date = it
+                        }
                     )
                     Text(
                         text = stringResource(id = R.string.description),
@@ -780,13 +778,10 @@ fun TransactionInputBox(
                         height = 80.dp,
                         keyboardType = KeyboardType.Text,
                         imeAction = ImeAction.Next,
-                        value = TextFieldValue(
-                            text = transactionInputState.comment
-                            , selection = TextRange(transactionInputState.comment.length)
-                        ),
+                        value = descriptionInput.value,
                         onvalueChange = { textFieldValue ->
-                            transactionInputState.comment =
-                                textFieldValue.text
+                            descriptionInput.value =
+                                textFieldValue
                         })
                     Text(
                         text = stringResource(id = R.string.tags),
@@ -806,8 +801,18 @@ fun TransactionInputBox(
                 .clickable(onClick = {
                     Log.d(
                         "Tien Test",
-                        "Name -> ${transactionInputState.name}\nAmount -> ${transactionInputState.amount}\nDate -> ${transactionInputState.date}\nDescription -> ${transactionInputState.comment}" +
+                        "Name -> ${nameInput}\nAmount -> ${amountInput}\nDate -> " +
+                                "${transactionInputState.date}\nDescription -> ${descriptionInput}" +
                                 "Tags -> ${transactionInputState.tags}"
+                    )
+                    transactionResult(
+                        Transaction(
+                            name = nameInput.value.text,
+                            amount = amountInput.value.text.moneyToDouble(),
+                            tags = transactionInputState.tags,
+                            date = transactionInputState.date,
+                            comment = descriptionInput.value.text
+                        )
                     )
                 }, indication = RippleIndication(bounded = true)),
             gravity = ContentGravity.Center,

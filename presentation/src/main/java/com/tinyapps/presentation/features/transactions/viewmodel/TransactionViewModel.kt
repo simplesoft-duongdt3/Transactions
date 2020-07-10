@@ -3,8 +3,9 @@ package com.tinyapps.presentation.features.transactions.viewmodel
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
-import com.tinyapps.data.features.transactions.mapper.TagListMapper
-import com.tinyapps.data.features.transactions.mapper.TransactionMapper
+import com.tinyapps.common_jvm.date.toDate
+import com.tinyapps.presentation.mapper.TagListMapper
+import com.tinyapps.presentation.mapper.TransactionMapper
 import com.tinyapps.domain.features.transactions.usecase.CreateTransactionUseCase
 import com.tinyapps.domain.features.transactions.usecase.CreateTransactionUseCaseParams
 import com.tinyapps.domain.features.transactions.usecase.GetTransactionsUseCase
@@ -12,7 +13,6 @@ import com.tinyapps.domain.features.transactions.usecase.GetTransactionsUseCaseP
 import com.tinyapps.presentation.base.AppDispatchers
 import com.tinyapps.presentation.base.BaseViewModel
 import com.tinyapps.presentation.features.transactions.model.Transaction
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.*
@@ -27,24 +27,24 @@ class TransactionViewModel(
 ) : BaseViewModel() {
     val transactionsLiveData: MutableLiveData<List<Transaction>> = MutableLiveData()
 
-    fun createTransaction() =
+    fun createTransaction(transaction: Transaction, result : (Boolean) -> Unit) =
         viewModelScope.launch(appDispatchers.main) {
             val createTransactionResult = withContext(appDispatchers.io) {
                 createTransactionUseCase.execute(
                     CreateTransactionUseCaseParams(
-                        tags = listOf("tag12", "tag13", "tag14"),
-                        date = Date(),
-                        amount = 10198.0,
-                        description = "Test thử xem nào",
-                        name = "Buy a girl test lần final"
+                        tags = transaction.tags,
+                        date = transaction.date.toDate()?:Date(),
+                        amount = transaction.amount,
+                        description = transaction.comment,
+                        name = transaction.name
                     )
                 )
             }
 
             createTransactionResult.either({
-                Log.d("Tien", "createTransactionResult Failure ${it}")
-            }, { result ->
-                Log.d("Tien", "createTransactionResult Success ${result}")
+                result(false)
+            }, {
+                result(true)
             })
         }
     val tagsLiveData: MutableLiveData<List<String>> = MutableLiveData()
