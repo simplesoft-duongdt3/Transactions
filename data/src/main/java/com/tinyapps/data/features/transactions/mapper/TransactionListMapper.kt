@@ -3,16 +3,22 @@ package com.tinyapps.data.features.transactions.mapper
 import android.util.Log
 import com.tinyapps.common_jvm.extension.nullable.defaultEmpty
 import com.tinyapps.common_jvm.extension.nullable.defaultZero
+import com.tinyapps.common_jvm.extension.string.moneyToDouble
 import com.tinyapps.common_jvm.extension.string.toDateLong
 import com.tinyapps.common_jvm.extension.string.toListTags
 import com.tinyapps.common_jvm.mapper.Mapper
 import com.tinyapps.data.features.transactions.models.TransactionListResponse
 import com.tinyapps.domain.features.transactions.models.TransactionListEntity
 
-class TransactionListMapper : Mapper<TransactionListResponse?, TransactionListEntity>() {
+class TransactionListMapper : Mapper<TransactionListResponse?,TransactionListEntity>() {
     override fun map(input: TransactionListResponse?): TransactionListEntity {
         Log.d("TransactionListMapper","from $input")
-        val transactions = input?.feed?.transactions?.filterNotNull().defaultEmpty().map { transaction ->
+        val account = TransactionListEntity.Account("Account X",0.0)
+        val transactions = input?.feed?.transactions?.filterNotNull().defaultEmpty().mapIndexed { index,transaction ->
+            if(index == 0) {
+                //first item will contain total money of account
+                account.total = transaction.total.value.moneyToDouble()
+            }
             //todo need update id vs date correct
             TransactionListEntity.Transaction(
                 id = "",
@@ -20,9 +26,12 @@ class TransactionListMapper : Mapper<TransactionListResponse?, TransactionListEn
                 description = transaction.description.value,
                 name = transaction.name.value,
                 tags = transaction.tags.value.toListTags(),
-                value = transaction.value.value.toDouble().defaultZero()
+                value = transaction.value.value.toDouble().defaultZero(),
+                total = transaction.total.value.moneyToDouble()
             )
         }
-        return TransactionListEntity(transactions = transactions)
+
+        Log.d("TransactionListMapper","to $transactions")
+        return TransactionListEntity(transactions = transactions,account = account)
     }
 }

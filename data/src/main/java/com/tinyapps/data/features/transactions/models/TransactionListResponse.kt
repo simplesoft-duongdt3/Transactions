@@ -23,7 +23,9 @@ data class Transaction(
     @SerializedName("gsx\$description")
     val description: GsxName,
     @SerializedName("gsx\$tags")
-    val tags: GsxName
+    val tags: GsxName,
+    @SerializedName("gsx\$total")
+    val total: GsxName
 )
 
 data class GsxName (

@@ -45,6 +45,7 @@ import com.tinyapps.transactions.R
 import com.tinyapps.transactions.ui.listener.IFilter
 import com.tinyapps.transactions.ui.state.*
 import java.util.*
+import kotlin.collections.ArrayList
 
 
 /**
@@ -77,7 +78,14 @@ fun HeaderComponent(enableDarkMode: Boolean, onCheckChanged: (Boolean) -> Unit) 
 }
 
 @Composable
-fun WalletsComponent(wallets: List<Wallet>) {
+fun WalletsComponent(accountLiveData: LiveData<Double>) {
+    val accountTotal by accountLiveData.observeAsState(initial = 0.0)
+    val wallets: ArrayList<Wallet> = arrayListOf(
+        Wallet(
+            "Account X",
+            accountTotal
+        )
+    )
     HorizontalScroller(modifier = Modifier.fillMaxWidth()) {
         val context = ContextAmbient.current
         val resources = context.resources
@@ -131,11 +139,17 @@ fun TransactionsComponent(
 
     appState.numOfTransaction = transactions.size
     if (transactions.isNotEmpty()) {
-        LazyColumnItems(
-            items = transactions,
-            modifier = Modifier.fillMaxHeight().padding(8.dp)
-        ) {
-            TransactionItem(it = it)
+//        LazyColumnItems(
+//            items = transactions,
+//            modifier = Modifier.wrapContentHeight().padding(8.dp)
+//        ) {
+//            TransactionItem(it = it)
+//        }
+//
+        VerticalScroller(modifier = Modifier.fillMaxHeight().padding(8.dp)) {
+            transactions.forEach {
+                TransactionItem(it = it)
+            }
         }
     } else {
         EmptyView()
@@ -638,10 +652,6 @@ fun DateBox(
 
     }
 }
-
-
-
-
 
 
 @Preview

@@ -26,6 +26,7 @@ import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.filled.Add
 import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.dp
+import com.tinyapps.common_jvm.extension.nullable.defaultZero
 import com.tinyapps.presentation.features.transactions.model.Transaction
 import com.tinyapps.presentation.features.transactions.model.Wallet
 import com.tinyapps.presentation.features.transactions.viewmodel.TransactionViewModel
@@ -102,20 +103,7 @@ class MainActivity : AppCompatActivity() {
                                     onCheckChanged = onCheckChanged
                                 )
                                 WalletsComponent(
-                                    listOf(
-                                        Wallet(
-                                            "Account X",
-                                            93993
-                                        ),
-                                        Wallet(
-                                            "Account Y",
-                                            33443
-                                        ),
-                                        Wallet(
-                                            "Account Z",
-                                            43993
-                                        )
-                                    )
+                                    mTransactionViewModel.accountLiveData
                                 )
                                 FilterComponent(appState)
                                 SwipeToRefreshLayout(

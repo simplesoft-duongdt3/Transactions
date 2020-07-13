@@ -1,12 +1,18 @@
 package com.tinyapps.domain.features.transactions.models
 
-data class TransactionListEntity(val transactions: List<Transaction>) {
+data class TransactionListEntity(val transactions: List<Transaction>,val account: Account) {
     data class Transaction(
         val id: String,
         val name: String,
         val description: String,
         val value: Double,
         val date: Long,
-        val tags: List<String>
+        val tags: List<String>,
+        val total: Double
+    )
+
+    data class Account(
+        var name: String,
+        var total: Double
     )
 }
