@@ -4,6 +4,7 @@
     android:layout_height="match_parent"
     android:background="@color/bg_transaction_input"
     android:orientation="vertical">
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
@@ -29,10 +30,10 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
         android:layout_margin="16dp"
-        android:padding="8dp"
-        android:orientation="vertical">
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="8dp">
 
 
         <com.google.android.material.textfield.TextInputLayout
@@ -81,9 +82,9 @@
                 android:id="@+id/edDate"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:inputType="datetime"
                 android:focusable="false"
                 android:focusableInTouchMode="false"
+                android:inputType="datetime"
                 android:longClickable="false"
                 android:nextFocusDown="@id/edDescription" />
 
@@ -105,17 +106,24 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/chip_tags"
+        <HorizontalScrollView
+            android:id="@+id/scrollViewChips"
             android:layout_width="match_parent"
-            android:layout_height="56dp"/>
+            android:layout_height="wrap_content">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chip_tags"
+                android:layout_width="wrap_content"
+                android:layout_height="56dp" />
+        </HorizontalScrollView>
+
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/textFieldTags"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
-            android:orientation="horizontal"
             android:layout_height="wrap_content"
-            android:hint="@string/tags">
+            android:hint="@string/tags"
+            android:orientation="horizontal">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/edTags"
@@ -125,13 +133,14 @@
 
         </com.google.android.material.textfield.TextInputLayout>
     </LinearLayout>
+
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btn_add_transaction"
         android:layout_width="match_parent"
+        android:layout_height="56dp"
         android:background="@color/bg_btn_add_transaction"
-        android:textColor="@android:color/white"
         android:text="@string/add_transaction"
         android:textAllCaps="true"
-        android:textSize="14sp"
-        android:layout_height="56dp"/>
+        android:textColor="@android:color/white"
+        android:textSize="14sp" />
 </LinearLayout>

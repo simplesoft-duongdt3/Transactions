@@ -7,10 +7,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.Window
 import android.widget.EditText
+import android.widget.HorizontalScrollView
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.content.ContextCompat
 import androidx.core.view.size
-import androidx.core.widget.addTextChangedListener
+import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
@@ -33,6 +34,7 @@ class TransactionInputFragment : DialogFragment() {
     private lateinit var edDescription: EditText
     private lateinit var edTags: EditText
     private lateinit var chipTags: ChipGroup
+    private lateinit var scrollViewChips: HorizontalScrollView
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -51,6 +53,7 @@ class TransactionInputFragment : DialogFragment() {
         edDescription = view.findViewById(R.id.edDescription)
         edTags = view.findViewById(R.id.edTags)
         chipTags = view.findViewById(R.id.chip_tags)
+        scrollViewChips = view.findViewById(R.id.scrollViewChips)
         edDate.setOnClickListener {
             val builder = MaterialDatePicker.Builder.datePicker()
                 .also {
@@ -62,31 +65,35 @@ class TransactionInputFragment : DialogFragment() {
             datePicker.addOnPositiveButtonClickListener {
                 val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
                 calendar.time = Date(it)
-                edDate.setText("${calendar.get(Calendar.DAY_OF_MONTH)}/" +
-                        "${calendar.get(Calendar.MONTH) + 1}/${calendar.get(Calendar.YEAR)}")
+                edDate.setText(
+                    "${calendar.get(Calendar.DAY_OF_MONTH)}/" +
+                            "${calendar.get(Calendar.MONTH) + 1}/${calendar.get(Calendar.YEAR)}"
+                )
             }
 
             datePicker.show(childFragmentManager, "DatePicker")
         }
-        edTags.addTextChangedListener(
-            afterTextChanged = { afterText ->
-                if (!afterText.isNullOrEmpty() && afterText[afterText.lastIndex] == '\n') {
-                    //enter trigger
-                    val chip = Chip(context)
-                    chip.text = afterText.toString()
-                    chip.chipIcon =
-                        ContextCompat.getDrawable(requireContext(), R.drawable.ic_hashtag)
-                    chip.isCloseIconVisible = true
-                    chip.setChipIconTintResource(R.color.bg_btn_add_transaction)
-                    // necessary to get single selection working
-                    chip.isClickable = true
-                    chip.isCheckable = false
-                    chipTags.addView(chip as View)
-                    chip.setOnCloseIconClickListener { chipTags.removeView(chip as View) }
-                    edTags.setText("")
+        edTags.doAfterTextChanged { afterText ->
+            if (!afterText.isNullOrEmpty() && afterText[afterText.lastIndex] == '\n') {
+                //enter trigger
+                val chip = Chip(context)
+                chip.text = afterText.toString()
+                chip.chipIcon =
+                    ContextCompat.getDrawable(requireContext(), R.drawable.ic_hashtag)
+                chip.isCloseIconVisible = true
+                chip.setChipIconTintResource(R.color.bg_btn_add_transaction)
+                // necessary to get single selection working
+                chip.isClickable = true
+                chip.isCheckable = false
+                chipTags.addView(chip as View)
+                chip.setOnCloseIconClickListener { chipTags.removeView(chip as View) }
+                edTags.setText("")
+
+                if (!scrollViewChips.canScrollHorizontally(1)) {
+                    scrollViewChips.post { scrollViewChips.fullScroll(View.FOCUS_RIGHT) }
                 }
             }
-        )
+        }
         btnAddTransaction.setOnClickListener {
             sendDataResult()
             dismiss()
@@ -112,7 +119,7 @@ class TransactionInputFragment : DialogFragment() {
             tags = tags,
             id = "1"
         )
-        callbackResult?.sendResult(requestCode = requestCode,obj = transaction)
+        callbackResult?.sendResult(requestCode = requestCode, obj = transaction)
     }
 
     interface CallbackResult {
