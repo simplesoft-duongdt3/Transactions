@@ -1,15 +1,21 @@
 package com.tinyapps.transactions.ui
 
+import android.app.Activity
 import android.app.Dialog
+import android.content.Context
+import android.inputmethodservice.InputMethodService
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.Window
+import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.HorizontalScrollView
+import android.widget.ImageView
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.content.ContextCompat
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.view.size
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.DialogFragment
@@ -21,6 +27,7 @@ import com.tinyapps.common_jvm.extension.string.toDateLong
 import com.tinyapps.transactions.R
 import java.util.*
 
+
 /**
  * Created by ChuTien on ${1/25/2017}.
  */
@@ -28,6 +35,7 @@ class TransactionInputFragment : DialogFragment() {
     var callbackResult: CallbackResult? = null
     var requestCode = 0
 
+    private lateinit var imgBack: ImageView
     private lateinit var edName: EditText
     private lateinit var edAmount: EditText
     private lateinit var edDate: EditText
@@ -47,6 +55,7 @@ class TransactionInputFragment : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val btnAddTransaction = view.findViewById<AppCompatButton>(R.id.btn_add_transaction)
+        imgBack = view.findViewById(R.id.img_transaction_input_back)
         edName = view.findViewById(R.id.edName)
         edAmount = view.findViewById(R.id.edAmount)
         edDate = view.findViewById(R.id.edDate)
@@ -58,6 +67,7 @@ class TransactionInputFragment : DialogFragment() {
             val builder = MaterialDatePicker.Builder.datePicker()
                 .also {
                     it.setTitleText("Pick Date")
+                    it.setSelection(Calendar.getInstance().timeInMillis)
                 }
 
             val datePicker = builder.build()
@@ -94,6 +104,10 @@ class TransactionInputFragment : DialogFragment() {
                 }
             }
         }
+        imgBack.setOnClickListener {
+            hideKeyboard(it)
+            dismiss()
+        }
         btnAddTransaction.setOnClickListener {
             sendDataResult()
             dismiss()
@@ -125,4 +139,10 @@ class TransactionInputFragment : DialogFragment() {
     interface CallbackResult {
         fun sendResult(requestCode: Int, obj: Any)
     }
+
+    fun hideKeyboard(view: View) {
+        val imm = activity?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
+    }
+
 }

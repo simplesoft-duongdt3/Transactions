@@ -48,6 +48,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        mTransactionViewModel.getAccountInfo()
         mTransactionViewModel.getTransactions(
             type = getString(R.string.all),
             tags = listOf(),

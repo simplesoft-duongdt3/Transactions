@@ -14,12 +14,12 @@ class TransactionListMapper : Mapper<TransactionListResponse?,TransactionListEnt
     override fun map(input: TransactionListResponse?): TransactionListEntity {
         Log.d("TransactionListMapper","from $input")
         val account = TransactionListEntity.Account("Account X",0.0)
-        val transactions = input?.feed?.transactions?.filterNotNull().defaultEmpty().mapIndexed { index,transaction ->
+        val transactions = input?.feed?.transactions?.filterNotNull().defaultEmpty().filter { transaction -> transaction.name.value.isNullOrEmpty().not() }.mapIndexed { index,transaction ->
+            Log.d("TransactionListMapper","process $transaction")
             if(index == 0) {
                 //first item will contain total money of account
                 account.total = transaction.total.value.moneyToDouble()
             }
-            //todo need update id vs date correct
             TransactionListEntity.Transaction(
                 id = "",
                 date = transaction.date.value.toDateLong(),
