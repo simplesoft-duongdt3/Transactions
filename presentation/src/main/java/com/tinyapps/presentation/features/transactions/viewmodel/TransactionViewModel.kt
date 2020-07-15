@@ -11,6 +11,7 @@ import com.tinyapps.presentation.mapper.TagListMapper
 import com.tinyapps.presentation.mapper.TransactionMapper
 import com.tinyapps.presentation.base.AppDispatchers
 import com.tinyapps.presentation.base.BaseViewModel
+import com.tinyapps.presentation.features.transactions.model.Account
 import com.tinyapps.presentation.features.transactions.model.Transaction
 import com.tinyapps.presentation.mapper.AccountMapper
 import kotlinx.coroutines.launch
@@ -28,7 +29,7 @@ class TransactionViewModel(
     val accountMapper: AccountMapper
 ) : BaseViewModel() {
     val transactionsLiveData: MutableLiveData<List<Transaction>> = MutableLiveData()
-    val accountLiveData: MutableLiveData<Double> = MutableLiveData()
+    val accountLiveData: MutableLiveData<Account> = MutableLiveData()
 
     fun createTransaction(transaction: Transaction, result: (Boolean) -> Unit) =
         viewModelScope.launch(appDispatchers.main) {
@@ -118,11 +119,11 @@ class TransactionViewModel(
                 )
             }
             accountResults.either({
-                accountLiveData.value = 0.0
+                accountLiveData.value = Account()
                 Log.d("Tien", "accountResults Failure $it")
             }) { result ->
                 val account = accountMapper.map(result)
-                accountLiveData.value = account.total.defaultZero()
+                accountLiveData.value = account
                 Log.d("Tien", "accountResults Success $account")
             }
         }

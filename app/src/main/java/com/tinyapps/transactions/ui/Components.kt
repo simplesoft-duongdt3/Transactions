@@ -2,7 +2,6 @@ package com.tinyapps.transactions.ui
 
 import android.util.Log
 import androidx.compose.*
-import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.LiveData
 import androidx.ui.core.Alignment
 import androidx.ui.core.ContextAmbient
@@ -14,11 +13,7 @@ import androidx.ui.foundation.shape.corner.RoundedCornerShape
 import androidx.ui.graphics.Color
 import androidx.ui.graphics.HorizontalGradient
 import androidx.ui.graphics.TileMode
-import androidx.ui.input.ImeAction
-import androidx.ui.input.KeyboardType
-import androidx.ui.input.TextFieldValue
 import androidx.ui.layout.*
-import androidx.ui.layout.ColumnScope.gravity
 import androidx.ui.layout.RowScope.weight
 import androidx.ui.livedata.observeAsState
 import androidx.ui.material.*
@@ -31,16 +26,14 @@ import androidx.ui.text.TextStyle
 import androidx.ui.text.font.FontWeight
 import androidx.ui.text.style.TextAlign
 import androidx.ui.tooling.preview.Preview
-import androidx.ui.unit.Dp
 import androidx.ui.unit.TextUnit
 import androidx.ui.unit.dp
 import androidx.ui.unit.sp
-import com.google.android.material.datepicker.MaterialDatePicker
 import com.tinyapps.common_jvm.extension.date.format
 import com.tinyapps.common_jvm.extension.nullable.defaultZero
 import com.tinyapps.common_jvm.extension.number.format
+import com.tinyapps.presentation.features.transactions.model.Account
 import com.tinyapps.presentation.features.transactions.model.Transaction
-import com.tinyapps.presentation.features.transactions.model.Wallet
 import com.tinyapps.transactions.R
 import com.tinyapps.transactions.ui.listener.IFilter
 import com.tinyapps.transactions.ui.state.*
@@ -78,14 +71,8 @@ fun HeaderComponent(enableDarkMode: Boolean, onCheckChanged: (Boolean) -> Unit) 
 }
 
 @Composable
-fun WalletsComponent(accountLiveData: LiveData<Double>) {
-    val accountTotal by accountLiveData.observeAsState(initial = 0.0)
-    val wallets: ArrayList<Wallet> = arrayListOf(
-        Wallet(
-            "Account X",
-            accountTotal
-        )
-    )
+fun WalletsComponent(accountLiveData: LiveData<Account>) {
+    val account by accountLiveData.observeAsState(initial = Account())
     HorizontalScroller(modifier = Modifier.fillMaxWidth()) {
         val context = ContextAmbient.current
         val resources = context.resources
@@ -94,7 +81,6 @@ fun WalletsComponent(accountLiveData: LiveData<Double>) {
         val screenWidth = displayMetrics.widthPixels / displayMetrics.density
         val spacing = 16.dp
         Row {
-            for (wallet in wallets) {
                 Card(
                     shape = RoundedCornerShape(4.dp),
                     color = accountBackground,
@@ -107,7 +93,7 @@ fun WalletsComponent(accountLiveData: LiveData<Double>) {
                         verticalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            wallet.name,
+                            account.name,
                             style = TextStyle(
                                 fontSize = 20.sp,
                                 color = textSecondary,
@@ -115,7 +101,7 @@ fun WalletsComponent(accountLiveData: LiveData<Double>) {
                             )
                         )
                         Text(
-                            "${wallet.balance.format()}$",
+                            "${account.total}$",
                             style = TextStyle(
                                 fontSize = 30.sp,
                                 color = textPrimary,
@@ -125,7 +111,6 @@ fun WalletsComponent(accountLiveData: LiveData<Double>) {
                     }
 
                 }
-            }
         }
     }
 }

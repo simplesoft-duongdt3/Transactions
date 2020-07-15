@@ -7,8 +7,7 @@ data class TransactionListEntity(val transactions: List<Transaction>,val account
         val description: String,
         val value: Double,
         val date: Long,
-        val tags: List<String>,
-        val total: Double
+        val tags: List<String>
     )
 
     data class Account(

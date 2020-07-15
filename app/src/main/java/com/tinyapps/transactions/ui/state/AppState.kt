@@ -6,8 +6,9 @@ import com.tinyapps.transactions.ui.BackPressHandler
 /**
  * Created by ChuTien on ${1/25/2017}.
  */
-class AppState(isLoading : Boolean = false,isShowDialog : Boolean = false, isShowTransactionInput : Boolean = false, numOfTransaction : Int = 0, private val backPressHandler: BackPressHandler){
+class AppState(isRefreshing : Boolean = false,isLoading : Boolean = false,isShowDialog : Boolean = false, isShowTransactionInput : Boolean = false, numOfTransaction : Int = 0, private val backPressHandler: BackPressHandler){
     var isLoading by mutableStateOf(isLoading)
+    var isRefreshing by mutableStateOf(isRefreshing)
     var isShowDialog by mutableStateOf(isShowDialog)
     var isShowTransactionInput by mutableStateOf(isShowTransactionInput)
     var numOfTransaction by mutableStateOf(numOfTransaction)

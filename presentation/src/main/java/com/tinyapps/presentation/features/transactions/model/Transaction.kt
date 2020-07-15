@@ -11,6 +11,5 @@ data class Transaction(
     var amount: Double = Random.nextDouble(-2000.0, 2000.0),
     var date: Long = 1593070307028,
     var comment: String = comments[Random.nextInt(comments.size - 1)],
-    var tags: List<String> = arrayListOf(),
-    var total: Double = 0.0
+    var tags: List<String> = arrayListOf()
 )

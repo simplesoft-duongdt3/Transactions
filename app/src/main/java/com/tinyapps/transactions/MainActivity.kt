@@ -2,15 +2,14 @@ package com.tinyapps.transactions
 
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.Composable
+import androidx.compose.frames.modelListOf
 import androidx.compose.remember
 import androidx.compose.state
 import androidx.fragment.app.FragmentTransaction
 import androidx.ui.animation.Crossfade
 import androidx.ui.core.Alignment
-import androidx.ui.core.ContextAmbient
 import androidx.ui.core.Modifier
 import androidx.ui.core.setContent
 import androidx.ui.foundation.Box
@@ -26,9 +25,7 @@ import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.filled.Add
 import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.dp
-import com.tinyapps.common_jvm.extension.nullable.defaultZero
 import com.tinyapps.presentation.features.transactions.model.Transaction
-import com.tinyapps.presentation.features.transactions.model.Wallet
 import com.tinyapps.presentation.features.transactions.viewmodel.TransactionViewModel
 import com.tinyapps.transactions.ui.*
 import com.tinyapps.transactions.ui.listener.IFilter
@@ -48,12 +45,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        mTransactionViewModel.getAccountInfo()
         mTransactionViewModel.getTransactions(
-            type = getString(R.string.all),
+            type = "All",
             tags = listOf(),
-            maxAmount = 2000.0
+            maxAmount = 9999999.999
         )
+        mTransactionViewModel.getAccountInfo()
 
         setContent {
             val appState = remember { AppState(backPressHandler = backPressHandler) }
@@ -75,6 +72,7 @@ class MainActivity : AppCompatActivity() {
                                                 transaction = obj as Transaction,
                                                 result = {
                                                     appState.isLoading = false
+                                                    reloadData(typeState, tagState, amountState)
                                                 })
                                         }
                                     }
@@ -108,13 +106,9 @@ class MainActivity : AppCompatActivity() {
                                 )
                                 FilterComponent(appState)
                                 SwipeToRefreshLayout(
-                                    refreshingState = appState.isLoading,
+                                    refreshingState = appState.isRefreshing,
                                     onRefresh = {
-                                        getTransaction(
-                                            typeState = typeState,
-                                            tagState = tagState,
-                                            amountState = amountState
-                                        )
+                                        reloadData(typeState, tagState, amountState)
                                     },
                                     refreshIndicator = {
                                         Surface(elevation = 10.dp, shape = CircleShape) {
@@ -148,10 +142,10 @@ class MainActivity : AppCompatActivity() {
                                                 typeState.selectedOption =
                                                     typeFilterState.selectedOption
                                                 amountState.value = amountFilterState.value
-                                                getTransaction(
-                                                    typeState = typeState,
-                                                    tagState = tagState,
-                                                    amountState = amountState
+                                                mTransactionViewModel.getTransactions(
+                                                    type = typeState.selectedOption,
+                                                    tags = tagState.selectedOption,
+                                                    maxAmount = amountState.max
                                                 )
                                             }
 
@@ -172,7 +166,7 @@ class MainActivity : AppCompatActivity() {
 
                             }
 
-                            if (appState.isLoading) {
+                            if (appState.isLoading || appState.isRefreshing) {
                                 Box(
                                     modifier = Modifier.fillMaxSize()
                                         .wrapContentSize(Alignment.Center)
@@ -190,7 +184,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private fun getTransaction(
+    private fun reloadData(
         typeState: TypeState,
         tagState: TagState,
         amountState: AmountState
@@ -201,6 +195,7 @@ class MainActivity : AppCompatActivity() {
             maxAmount = amountState.value
                 ?: amountState.max
         )
+        mTransactionViewModel.getAccountInfo()
     }
 }
 

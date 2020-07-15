@@ -16,18 +16,13 @@ class TransactionListMapper : Mapper<TransactionListResponse?,TransactionListEnt
         val account = TransactionListEntity.Account("Account X",0.0)
         val transactions = input?.feed?.transactions?.filterNotNull().defaultEmpty().filter { transaction -> transaction.name.value.isNullOrEmpty().not() }.mapIndexed { index,transaction ->
             Log.d("TransactionListMapper","process $transaction")
-            if(index == 0) {
-                //first item will contain total money of account
-                account.total = transaction.total.value.moneyToDouble()
-            }
             TransactionListEntity.Transaction(
                 id = "",
                 date = transaction.date.value.toDateLong(),
                 description = transaction.description.value,
                 name = transaction.name.value,
                 tags = transaction.tags.value.toListTags(),
-                value = transaction.value.value.toDouble().defaultZero(),
-                total = transaction.total.value.moneyToDouble()
+                value = transaction.value.value.toDouble().defaultZero()
             )
         }
 
