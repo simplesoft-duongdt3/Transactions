@@ -1,10 +1,10 @@
 package com.tinyapps.transactions.ui
 
-import android.app.Activity
+import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
-import android.inputmethodservice.InputMethodService
 import android.os.Bundle
+import android.text.Editable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,7 +15,6 @@ import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.view.size
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.DialogFragment
@@ -33,12 +32,13 @@ import java.util.*
  */
 class TransactionInputFragment : DialogFragment() {
     var callbackResult: CallbackResult? = null
-    var requestCode = 0
+    private var requestCode = 0
 
     private lateinit var imgBack: ImageView
     private lateinit var edName: EditText
     private lateinit var edAmount: EditText
     private lateinit var edDate: EditText
+    private lateinit var textFieldDate: View
     private lateinit var edDescription: EditText
     private lateinit var edTags: EditText
     private lateinit var chipTags: ChipGroup
@@ -59,50 +59,16 @@ class TransactionInputFragment : DialogFragment() {
         edName = view.findViewById(R.id.edName)
         edAmount = view.findViewById(R.id.edAmount)
         edDate = view.findViewById(R.id.edDate)
+        textFieldDate = view.findViewById(R.id.textFieldDate)
         edDescription = view.findViewById(R.id.edDescription)
         edTags = view.findViewById(R.id.edTags)
         chipTags = view.findViewById(R.id.chip_tags)
         scrollViewChips = view.findViewById(R.id.scrollViewChips)
         edDate.setOnClickListener {
-            val builder = MaterialDatePicker.Builder.datePicker()
-                .also {
-                    it.setTitleText("Pick Date")
-                    it.setSelection(Calendar.getInstance().timeInMillis)
-                }
-
-            val datePicker = builder.build()
-
-            datePicker.addOnPositiveButtonClickListener {
-                val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-                calendar.time = Date(it)
-                edDate.setText(
-                    "${calendar.get(Calendar.DAY_OF_MONTH)}/" +
-                            "${calendar.get(Calendar.MONTH) + 1}/${calendar.get(Calendar.YEAR)}"
-                )
-            }
-
-            datePicker.show(childFragmentManager, "DatePicker")
+             showDatePicker()
         }
         edTags.doAfterTextChanged { afterText ->
-            if (!afterText.isNullOrEmpty() && afterText[afterText.lastIndex] == '\n') {
-                //enter trigger
-                val chip = Chip(context)
-                chip.text = afterText.toString()
-                chip.chipIcon =
-                    ContextCompat.getDrawable(requireContext(), R.drawable.ic_hashtag)
-                chip.isCloseIconVisible = true
-                chip.setChipIconTintResource(R.color.bg_btn_add_transaction)
-                // necessary to get single selection working
-                chip.isClickable = true
-                chip.isCheckable = false
-                chipTags.addView(chip as View)
-                chip.setOnCloseIconClickListener { chipTags.removeView(chip as View) }
-                edTags.setText("")
-
-                if (!scrollViewChips.canScrollHorizontally(1)) {
-                    scrollViewChips.post { scrollViewChips.fullScroll(View.FOCUS_RIGHT) }
-                }
-            }
+            handleChipInput(afterText)
         }
         imgBack.setOnClickListener {
             hideKeyboard(it)
@@ -112,6 +78,50 @@ class TransactionInputFragment : DialogFragment() {
             sendDataResult()
             dismiss()
         }
+    }
+
+    private fun handleChipInput(afterText: Editable?) {
+        if (!afterText.isNullOrEmpty() && afterText[afterText.lastIndex] == '\n') {
+            //enter trigger
+            val chip = Chip(context)
+            chip.text = afterText.toString()
+            chip.chipIcon =
+                ContextCompat.getDrawable(requireContext(), R.drawable.ic_hashtag)
+            chip.isCloseIconVisible = true
+            chip.setChipIconTintResource(R.color.bg_btn_add_transaction)
+            // necessary to get single selection working
+            chip.isClickable = true
+            chip.isCheckable = false
+            chipTags.addView(chip as View)
+            chip.setOnCloseIconClickListener { chipTags.removeView(chip as View) }
+            edTags.setText("")
+
+            if (!scrollViewChips.canScrollHorizontally(1)) {
+                scrollViewChips.post { scrollViewChips.fullScroll(View.FOCUS_RIGHT) }
+            }
+        }
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun showDatePicker() {
+        val builder = MaterialDatePicker.Builder.datePicker()
+            .also {
+                it.setTitleText("Pick Date")
+                it.setSelection(Calendar.getInstance().timeInMillis)
+            }
+
+        val datePicker = builder.build()
+
+        datePicker.addOnPositiveButtonClickListener {
+            val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+            calendar.time = Date(it)
+            edDate.setText(
+                "${calendar.get(Calendar.DAY_OF_MONTH)}/" +
+                        "${calendar.get(Calendar.MONTH) + 1}/${calendar.get(Calendar.YEAR)}"
+            )
+        }
+
+        datePicker.show(childFragmentManager, "DatePicker")
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -140,7 +150,7 @@ class TransactionInputFragment : DialogFragment() {
         fun sendResult(requestCode: Int, obj: Any)
     }
 
-    fun hideKeyboard(view: View) {
+    private fun hideKeyboard(view: View) {
         val imm = activity?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
