@@ -79,6 +79,9 @@ dependencies {
     // Koin AndroidX Fragment features
     implementation "org.koin:koin-androidx-fragment:$koin_version"
 
+    //date picker
+    implementation 'com.wdullaer:materialdatetimepicker:4.2.3'
+
 
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'

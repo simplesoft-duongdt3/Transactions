@@ -71,24 +71,15 @@
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/textFieldDate"
-            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/txtDate"
             android:layout_width="180dp"
-
-            android:layout_height="wrap_content"
-            android:hint="@string/date">
-
-            <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/edDate"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:focusableInTouchMode="false"
-                android:inputType="datetime"
-                android:longClickable="false"
-                android:nextFocusDown="@id/edDescription" />
-
-        </com.google.android.material.textfield.TextInputLayout>
+            android:text="@string/pick_date"
+            android:textAllCaps="true"
+            android:layout_marginTop="4dp"
+            android:padding="16dp"
+            android:background="@drawable/text_round"
+            android:layout_height="wrap_content"/>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/textFieldDescription"

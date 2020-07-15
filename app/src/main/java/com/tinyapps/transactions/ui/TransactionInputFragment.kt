@@ -1,6 +1,5 @@
 package com.tinyapps.transactions.ui
 
-import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
@@ -13,6 +12,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.HorizontalScrollView
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.appcompat.widget.AppCompatButton
 import androidx.core.content.ContextCompat
 import androidx.core.view.size
@@ -20,10 +20,10 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
-import com.google.android.material.datepicker.MaterialDatePicker
 import com.tinyapps.common_jvm.extension.string.moneyToDouble
 import com.tinyapps.common_jvm.extension.string.toDateLong
 import com.tinyapps.transactions.R
+import com.wdullaer.materialdatetimepicker.date.DatePickerDialog
 import java.util.*
 
 
@@ -37,8 +37,7 @@ class TransactionInputFragment : DialogFragment() {
     private lateinit var imgBack: ImageView
     private lateinit var edName: EditText
     private lateinit var edAmount: EditText
-    private lateinit var edDate: EditText
-    private lateinit var textFieldDate: View
+    private lateinit var txtDate: TextView
     private lateinit var edDescription: EditText
     private lateinit var edTags: EditText
     private lateinit var chipTags: ChipGroup
@@ -58,14 +57,13 @@ class TransactionInputFragment : DialogFragment() {
         imgBack = view.findViewById(R.id.img_transaction_input_back)
         edName = view.findViewById(R.id.edName)
         edAmount = view.findViewById(R.id.edAmount)
-        edDate = view.findViewById(R.id.edDate)
-        textFieldDate = view.findViewById(R.id.textFieldDate)
+        txtDate = view.findViewById(R.id.txtDate)
         edDescription = view.findViewById(R.id.edDescription)
         edTags = view.findViewById(R.id.edTags)
         chipTags = view.findViewById(R.id.chip_tags)
         scrollViewChips = view.findViewById(R.id.scrollViewChips)
-        edDate.setOnClickListener {
-             showDatePicker()
+        txtDate.setOnClickListener {
+            showDatePicker()
         }
         edTags.doAfterTextChanged { afterText ->
             handleChipInput(afterText)
@@ -102,26 +100,32 @@ class TransactionInputFragment : DialogFragment() {
         }
     }
 
-    @SuppressLint("SetTextI18n")
-    private fun showDatePicker() {
-        val builder = MaterialDatePicker.Builder.datePicker()
-            .also {
-                it.setTitleText("Pick Date")
-                it.setSelection(Calendar.getInstance().timeInMillis)
-            }
-
-        val datePicker = builder.build()
-
-        datePicker.addOnPositiveButtonClickListener {
-            val calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
-            calendar.time = Date(it)
-            edDate.setText(
-                "${calendar.get(Calendar.DAY_OF_MONTH)}/" +
+    private fun showDatePicker(){
+        val cur_calender = Calendar.getInstance()
+        val datePicker: DatePickerDialog = DatePickerDialog.newInstance(
+            { _, year, monthOfYear, dayOfMonth ->
+                val calendar = Calendar.getInstance()
+                calendar[Calendar.YEAR] = year
+                calendar[Calendar.MONTH] = monthOfYear
+                calendar[Calendar.DAY_OF_MONTH] = dayOfMonth
+                txtDate.text = "${calendar.get(Calendar.DAY_OF_MONTH)}/" +
                         "${calendar.get(Calendar.MONTH) + 1}/${calendar.get(Calendar.YEAR)}"
-            )
+            },
+            cur_calender[Calendar.YEAR],
+            cur_calender[Calendar.MONTH],
+            cur_calender[Calendar.DAY_OF_MONTH]
+        )
+        //set dark light
+        //set dark light
+        datePicker.isThemeDark = false
+        datePicker.minDate = cur_calender
+        context?.let{
+            datePicker.accentColor = ContextCompat.getColor(it,R.color.bg_btn_add_transaction)
+            datePicker.setOkColor(ContextCompat.getColor(it,R.color.white))
+            datePicker.setCancelColor(ContextCompat.getColor(it,R.color.white))
         }
 
-        datePicker.show(childFragmentManager, "DatePicker")
+        datePicker.show(childFragmentManager,"OK")
     }
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -137,7 +141,7 @@ class TransactionInputFragment : DialogFragment() {
         }
         val transaction = com.tinyapps.presentation.features.transactions.model.Transaction(
             name = edName.text.toString(),
-            date = edDate.text.toString().toDateLong(),
+            date = txtDate.text.toString().toDateLong(),
             amount = edAmount.text.toString().moneyToDouble(),
             comment = edDescription.text.toString(),
             tags = tags,
