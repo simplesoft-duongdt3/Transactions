@@ -1,10 +1,7 @@
 package com.tinyapps.common_jvm.extension.string
 
 import com.tinyapps.common_jvm.extension.nullable.defaultZero
-import java.text.DateFormat
-import java.text.DecimalFormat
-import java.text.DecimalFormatSymbols
-import java.text.SimpleDateFormat
+import java.text.*
 import java.util.*
 
 /**
@@ -28,9 +25,17 @@ fun String.toListTags() : List<String>{
 }
 
 fun String.toDateLong() : Long{
-    return dateFormat.parse(this).time.defaultZero()
+    return try {
+        dateFormat.parse(this).time.defaultZero()
+    } catch (e: ParseException) {
+        0
+    }
 }
 
 fun String.moneyToDouble() : Double{
-    return numberFormat.parse(this).toDouble()
+    return try {
+        numberFormat.parse(this).toDouble()
+    } catch (e: ParseException) {
+        0.0
+    }
 }

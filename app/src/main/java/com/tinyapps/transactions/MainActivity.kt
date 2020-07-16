@@ -2,11 +2,12 @@ package com.tinyapps.transactions
 
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.Composable
+import androidx.compose.frames.modelListOf
 import androidx.compose.remember
 import androidx.compose.state
+import androidx.fragment.app.FragmentTransaction
 import androidx.ui.animation.Crossfade
 import androidx.ui.core.Alignment
 import androidx.ui.core.Modifier
@@ -24,7 +25,7 @@ import androidx.ui.material.icons.Icons
 import androidx.ui.material.icons.filled.Add
 import androidx.ui.tooling.preview.Preview
 import androidx.ui.unit.dp
-import com.tinyapps.presentation.features.transactions.model.Wallet
+import com.tinyapps.presentation.features.transactions.model.Transaction
 import com.tinyapps.presentation.features.transactions.viewmodel.TransactionViewModel
 import com.tinyapps.transactions.ui.*
 import com.tinyapps.transactions.ui.listener.IFilter
@@ -45,24 +46,40 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mTransactionViewModel.getTransactions(
-            type = getString(R.string.all),
+            type = "All",
             tags = listOf(),
-            maxAmount = 2000.0
+            maxAmount = 9999999.999
         )
+        mTransactionViewModel.getAccountInfo()
 
         setContent {
             val appState = remember { AppState(backPressHandler = backPressHandler) }
             val tagState = remember { TagState() }
             val typeState = remember { TypeState() }
             val amountState = remember { AmountState() }
-            val transactionInputState = remember { TransactionInputState() }
 
             Scaffold(
                 floatingActionButton = {
                     if (!appState.isShowDialog && !appState.isShowTransactionInput) {
                         FloatingActionButton(
                             onClick = {
-                                appState.updateTransactionInputFlag(true)
+                                val transactionInputFragment = TransactionInputFragment()
+                                transactionInputFragment.callbackResult =
+                                    object : TransactionInputFragment.CallbackResult {
+                                        override fun sendResult(requestCode: Int, obj: Any) {
+                                            appState.isLoading = true
+                                            mTransactionViewModel.createTransaction(
+                                                transaction = obj as Transaction,
+                                                result = {
+                                                    appState.isLoading = false
+                                                    reloadData(typeState, tagState, amountState)
+                                                })
+                                        }
+                                    }
+                                val transition = supportFragmentManager.beginTransaction()
+                                transition.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN)
+                                transition.add(android.R.id.content, transactionInputFragment)
+                                    .addToBackStack(null).commit()
                             },
                             backgroundColor = filter,
                             contentColor = Color.White
@@ -85,30 +102,13 @@ class MainActivity : AppCompatActivity() {
                                     onCheckChanged = onCheckChanged
                                 )
                                 WalletsComponent(
-                                    listOf(
-                                        Wallet(
-                                            "Account X",
-                                            93993
-                                        ),
-                                        Wallet(
-                                            "Account Y",
-                                            33443
-                                        ),
-                                        Wallet(
-                                            "Account Z",
-                                            43993
-                                        )
-                                    )
+                                    mTransactionViewModel.accountLiveData
                                 )
                                 FilterComponent(appState)
                                 SwipeToRefreshLayout(
-                                    refreshingState = appState.isLoading,
+                                    refreshingState = appState.isRefreshing,
                                     onRefresh = {
-                                        getTransaction(
-                                            typeState = typeState,
-                                            tagState = tagState,
-                                            amountState = amountState
-                                        )
+                                        reloadData(typeState, tagState, amountState)
                                     },
                                     refreshIndicator = {
                                         Surface(elevation = 10.dp, shape = CircleShape) {
@@ -142,10 +142,10 @@ class MainActivity : AppCompatActivity() {
                                                 typeState.selectedOption =
                                                     typeFilterState.selectedOption
                                                 amountState.value = amountFilterState.value
-                                                getTransaction(
-                                                    typeState = typeState,
-                                                    tagState = tagState,
-                                                    amountState = amountState
+                                                mTransactionViewModel.getTransactions(
+                                                    type = typeState.selectedOption,
+                                                    tags = tagState.selectedOption,
+                                                    maxAmount = amountState.max
                                                 )
                                             }
 
@@ -166,49 +166,7 @@ class MainActivity : AppCompatActivity() {
 
                             }
 
-                            if (appState.isShowTransactionInput) {
-                                Crossfade(current = currentFocus) {
-                                    TransactionInputBox(
-                                        supportFragmentManager = supportFragmentManager,
-                                        transactionInputState = transactionInputState,
-                                        appState = appState,
-                                        transactionResult = { transaction ->
-                                            run {
-                                                appState.isLoading = true
-                                                mTransactionViewModel.createTransaction(
-                                                    transaction = transaction,
-                                                    result = {
-                                                        if (it) {
-                                                            appState.updateTransactionInputFlag(
-                                                                false
-                                                            )
-                                                            Toast.makeText(
-                                                                this@MainActivity,
-                                                                "TRANSACTION SAVED",
-                                                                Toast.LENGTH_SHORT
-                                                            ).show()
-                                                            getTransaction(
-                                                                typeState = typeState,
-                                                                tagState = tagState,
-                                                                amountState = amountState
-                                                            )
-                                                        } else {
-                                                            Toast.makeText(
-                                                                this@MainActivity,
-                                                                "ERROR SEND TRANSACTION",
-                                                                Toast.LENGTH_SHORT
-                                                            ).show()
-                                                        }
-                                                        appState.isLoading = false
-                                                    })
-                                            }
-                                        }
-
-                                    )
-                                }
-
-                            }
-                            if (appState.isLoading) {
+                            if (appState.isLoading || appState.isRefreshing) {
                                 Box(
                                     modifier = Modifier.fillMaxSize()
                                         .wrapContentSize(Alignment.Center)
@@ -226,7 +184,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    private fun getTransaction(
+    private fun reloadData(
         typeState: TypeState,
         tagState: TagState,
         amountState: AmountState
@@ -237,6 +195,7 @@ class MainActivity : AppCompatActivity() {
             maxAmount = amountState.value
                 ?: amountState.max
         )
+        mTransactionViewModel.getAccountInfo()
     }
 }
 

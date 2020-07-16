@@ -19,4 +19,7 @@ interface TransactionRepository {
         tags: List<String>,
         date: Date
     ): Either<Failure, Boolean>
+
+    suspend fun getAccountInfo(
+        ): Either<Failure, TransactionListEntity.Account>
 }

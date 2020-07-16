@@ -4,15 +4,16 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.tinyapps.common_jvm.date.toDate
+import com.tinyapps.common_jvm.extension.nullable.defaultZero
+import com.tinyapps.domain.base.usecase.UseCaseParams
+import com.tinyapps.domain.features.transactions.usecase.*
 import com.tinyapps.presentation.mapper.TagListMapper
 import com.tinyapps.presentation.mapper.TransactionMapper
-import com.tinyapps.domain.features.transactions.usecase.CreateTransactionUseCase
-import com.tinyapps.domain.features.transactions.usecase.CreateTransactionUseCaseParams
-import com.tinyapps.domain.features.transactions.usecase.GetTransactionsUseCase
-import com.tinyapps.domain.features.transactions.usecase.GetTransactionsUseCaseParams
 import com.tinyapps.presentation.base.AppDispatchers
 import com.tinyapps.presentation.base.BaseViewModel
+import com.tinyapps.presentation.features.transactions.model.Account
 import com.tinyapps.presentation.features.transactions.model.Transaction
+import com.tinyapps.presentation.mapper.AccountMapper
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.*
@@ -21,19 +22,22 @@ import kotlin.math.abs
 class TransactionViewModel(
     val transactionsUseCase: GetTransactionsUseCase,
     val createTransactionUseCase: CreateTransactionUseCase,
+    val accountsUseCase: GetAccountInfoUseCase,
     val appDispatchers: AppDispatchers,
     val tagListMapper: TagListMapper,
-    val transactionListMapper: TransactionMapper
+    val transactionListMapper: TransactionMapper,
+    val accountMapper: AccountMapper
 ) : BaseViewModel() {
     val transactionsLiveData: MutableLiveData<List<Transaction>> = MutableLiveData()
+    val accountLiveData: MutableLiveData<Account> = MutableLiveData()
 
-    fun createTransaction(transaction: Transaction, result : (Boolean) -> Unit) =
+    fun createTransaction(transaction: Transaction, result: (Boolean) -> Unit) =
         viewModelScope.launch(appDispatchers.main) {
             val createTransactionResult = withContext(appDispatchers.io) {
                 createTransactionUseCase.execute(
                     CreateTransactionUseCaseParams(
                         tags = transaction.tags,
-                        date = transaction.date.toDate()?:Date(),
+                        date = transaction.date.toDate() ?: Date(),
                         amount = transaction.amount,
                         description = transaction.comment,
                         name = transaction.name
@@ -47,6 +51,7 @@ class TransactionViewModel(
                 result(true)
             })
         }
+
     val tagsLiveData: MutableLiveData<List<String>> = MutableLiveData()
 
 
@@ -103,6 +108,23 @@ class TransactionViewModel(
                     resultFilterByTag = resultFilterByType.toMutableList()
                 }
                 transactionsLiveData.value = resultFilterByTag
+            }
+        }
+
+    fun getAccountInfo() =
+        viewModelScope.launch(appDispatchers.main) {
+            val accountResults = withContext(appDispatchers.io) {
+                accountsUseCase.execute(
+                    UseCaseParams.Empty
+                )
+            }
+            accountResults.either({
+                accountLiveData.value = Account()
+                Log.d("Tien", "accountResults Failure $it")
+            }) { result ->
+                val account = accountMapper.map(result)
+                accountLiveData.value = account
+                Log.d("Tien", "accountResults Success $account")
             }
         }
 
