@@ -9,4 +9,5 @@
     <color name="white">#FFFFFFFF</color>
     <color name="bg_btn_add_transaction">#745CD4</color>
     <color name="bg_transaction_input">#FCFCFC</color>
+    <color name="ic_launcher_background">#002E45</color>
 </resources>
