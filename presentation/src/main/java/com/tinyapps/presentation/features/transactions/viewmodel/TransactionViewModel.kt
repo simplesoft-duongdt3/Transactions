@@ -29,7 +29,7 @@ class TransactionViewModel(
     val accountMapper: AccountMapper
 ) : BaseViewModel() {
     val transactionsLiveData: MutableLiveData<List<Transaction>> = MutableLiveData()
-    val accountLiveData: MutableLiveData<Account> = MutableLiveData()
+    val accountLiveData: MutableLiveData<List<Account>> = MutableLiveData()
 
     fun createTransaction(transaction: Transaction, result: (Boolean) -> Unit) =
         viewModelScope.launch(appDispatchers.main) {
@@ -119,12 +119,11 @@ class TransactionViewModel(
                 )
             }
             accountResults.either({
-                accountLiveData.value = Account()
+                accountLiveData.value = listOf()
                 Log.d("Tien", "accountResults Failure $it")
             }) { result ->
-                val account = accountMapper.map(result)
-                accountLiveData.value = account
-                Log.d("Tien", "accountResults Success $account")
+                accountLiveData.value = accountMapper.mapList(result)
+                Log.d("Tien", "accountResults Success $result")
             }
         }
 

@@ -7,6 +7,6 @@ import retrofit2.http.GET
 interface TransactionApiService {
     @GET("/feeds/list/1UC5I0gqYsMBN7yBEbaNU8ny3sEekiernRCdgb_-SeBY/ogdajwa/public/values?alt=json")
     suspend fun getTransactionList() : TransactionListResponse?
-    @GET("/feeds/list/1UC5I0gqYsMBN7yBEbaNU8ny3sEekiernRCdgb_-SeBY/ofgitbi/public/values?alt=json")
+    @GET("/feeds/list/1UC5I0gqYsMBN7yBEbaNU8ny3sEekiernRCdgb_-SeBY/opo5yhd/public/values?alt=json")
     suspend fun getAccountInfo() : AccountInfoResponse?
 }

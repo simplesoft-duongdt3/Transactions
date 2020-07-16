@@ -5,18 +5,19 @@ import com.tinyapps.common_jvm.extension.nullable.defaultEmpty
 import com.tinyapps.common_jvm.extension.nullable.defaultZero
 import com.tinyapps.common_jvm.extension.string.moneyToDouble
 import com.tinyapps.common_jvm.mapper.Mapper
-import com.tinyapps.data.features.transactions.models.AccountInfoResponse
-import com.tinyapps.domain.features.transactions.models.TransactionListEntity
+import com.tinyapps.data.features.transactions.models.Account
+import com.tinyapps.domain.features.transactions.models.AccountEntity
 
-class AccountInfoMapper : Mapper<AccountInfoResponse?, TransactionListEntity.Account>() {
-    override fun map(input: AccountInfoResponse?): TransactionListEntity.Account {
+class AccountInfoMapper :
+    Mapper<Account?, AccountEntity>() {
+    override fun map(input: Account?): AccountEntity {
         Log.d("AccountInfoMapper", "from $input")
-        val accountName =
-            input?.feed?.accounts?.filterNotNull().defaultEmpty()[0].name.value.defaultEmpty()
-        val accountTotal =
-            input?.feed?.accounts?.filterNotNull().defaultEmpty()[0].total.value.moneyToDouble()
-                .defaultZero()
-        val account = TransactionListEntity.Account(name = accountName, total = accountTotal)
+        val account = AccountEntity(
+            name = input?.name?.value.defaultEmpty(),
+            total = input?.total?.value?.moneyToDouble().defaultZero()
+                .defaultZero(),
+            id = input?.id?.value.defaultEmpty()
+        )
         Log.d("AccountInfoMapper", "to $account")
         return account
     }

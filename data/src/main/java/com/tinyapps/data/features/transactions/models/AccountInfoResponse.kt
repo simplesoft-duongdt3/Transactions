@@ -13,13 +13,6 @@ data class AccountFeed(
     val accounts: List<Account?>
 )
 
-data class Account(
-    @SerializedName("gsx\$total")
-    val total: AccountGsxName,
-    @SerializedName("gsx\$accountname")
-    val name: AccountGsxName
-)
-
 data class AccountGsxName (
     @SerializedName("\$t") val value : String
 )

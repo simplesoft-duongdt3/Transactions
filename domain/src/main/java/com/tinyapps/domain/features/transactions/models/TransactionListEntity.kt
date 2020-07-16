@@ -1,6 +1,6 @@
 package com.tinyapps.domain.features.transactions.models
 
-data class TransactionListEntity(val transactions: List<Transaction>,val account: Account) {
+data class TransactionListEntity(val transactions: List<Transaction>) {
     data class Transaction(
         val id: String,
         val name: String,
@@ -10,8 +10,4 @@ data class TransactionListEntity(val transactions: List<Transaction>,val account
         val tags: List<String>
     )
 
-    data class Account(
-        var name: String,
-        var total: Double
-    )
 }

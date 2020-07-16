@@ -71,8 +71,8 @@ fun HeaderComponent(enableDarkMode: Boolean, onCheckChanged: (Boolean) -> Unit) 
 }
 
 @Composable
-fun WalletsComponent(accountLiveData: LiveData<Account>) {
-    val account by accountLiveData.observeAsState(initial = Account())
+fun WalletsComponent(accountLiveData: LiveData<List<Account>>) {
+    val accounts by accountLiveData.observeAsState(initial = listOf())
     HorizontalScroller(modifier = Modifier.fillMaxWidth()) {
         val context = ContextAmbient.current
         val resources = context.resources
@@ -81,6 +81,7 @@ fun WalletsComponent(accountLiveData: LiveData<Account>) {
         val screenWidth = displayMetrics.widthPixels / displayMetrics.density
         val spacing = 16.dp
         Row {
+            accounts.map { account ->
                 Card(
                     shape = RoundedCornerShape(4.dp),
                     color = accountBackground,
@@ -111,9 +112,11 @@ fun WalletsComponent(accountLiveData: LiveData<Account>) {
                     }
 
                 }
+            }
         }
     }
 }
+
 
 @Composable
 fun TransactionsComponent(

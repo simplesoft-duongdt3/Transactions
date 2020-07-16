@@ -10,7 +10,7 @@ import com.tinyapps.data.features.transactions.mapper.AccountInfoMapper
 import com.tinyapps.data.features.transactions.mapper.TransactionListMapper
 import com.tinyapps.data.features.transactions.services.CreateTransactionApiService
 import com.tinyapps.data.features.transactions.services.TransactionApiService
-import com.tinyapps.domain.features.transactions.models.TransactionListEntity
+import com.tinyapps.domain.features.transactions.models.AccountEntity
 import com.tinyapps.domain.features.transactions.repository.TransactionRepository
 import java.util.*
 
@@ -60,9 +60,9 @@ class TransactionRepositoryImpl(
         return@runSuspendWithCatchError Either.Success(true)
     }
 
-    override suspend fun getAccountInfo(): Either<Failure, TransactionListEntity.Account> =
+    override suspend fun getAccountInfo(): Either<Failure, List<AccountEntity>> =
         Either.runSuspendWithCatchError(listOf(remoteExceptionInterceptor)) {
             val accountInfoResponse = transactionApiService.getAccountInfo()
-            return@runSuspendWithCatchError Either.Success(accountInfoMapper.map(accountInfoResponse))
+            return@runSuspendWithCatchError Either.Success(accountInfoMapper.mapList(accountInfoResponse?.feed?.accounts))
         }
 }
