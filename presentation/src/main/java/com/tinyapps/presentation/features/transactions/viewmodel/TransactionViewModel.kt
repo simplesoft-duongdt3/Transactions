@@ -74,40 +74,7 @@ class TransactionViewModel(
                 val transactions = transactionListMapper.mapList(result.transactions)
                 tagsLiveData.value = tagListMapper.map(transactions)
                 Log.d("Tien", "transactionResults Success ${transactions}")
-                val resultFilterByType =
-                    when (type) {
-                        "Expenses" -> {
-                            transactions.filter { transaction ->
-                                (transaction.amount < 0 && abs(
-                                    transaction.amount
-                                ) < maxAmount)
-                            }
-                        }
-                        "Revenue" -> {
-                            transactions.filter { transaction ->
-                                (transaction.amount >= 0 && abs(
-                                    transaction.amount
-                                ) < maxAmount)
-                            }
-                        }
-                        else -> {
-                            transactions.filter { transaction -> abs(transaction.amount) < maxAmount }
-                        }
-                    }
-                // filter by tag
-                var resultFilterByTag: MutableList<Transaction> = mutableListOf()
-                if (tags.isNotEmpty()) {
-                    tags.forEach {
-                        resultFilterByTag.addAll(transactions.filter { transaction ->
-                            transaction.tags.contains(
-                                it
-                            )
-                        })
-                    }
-                } else {
-                    resultFilterByTag = resultFilterByType.toMutableList()
-                }
-                transactionsLiveData.value = resultFilterByTag
+                transactionsLiveData.value = transactions
             }
         }
 

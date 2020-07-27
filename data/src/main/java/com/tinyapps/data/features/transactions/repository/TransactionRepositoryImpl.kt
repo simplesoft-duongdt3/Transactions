@@ -11,8 +11,10 @@ import com.tinyapps.data.features.transactions.mapper.TransactionListMapper
 import com.tinyapps.data.features.transactions.services.CreateTransactionApiService
 import com.tinyapps.data.features.transactions.services.TransactionApiService
 import com.tinyapps.domain.features.transactions.models.AccountEntity
+import com.tinyapps.domain.features.transactions.models.TransactionListEntity
 import com.tinyapps.domain.features.transactions.repository.TransactionRepository
 import java.util.*
+import kotlin.math.abs
 
 class TransactionRepositoryImpl(
     private val transactionApiService: TransactionApiService,
@@ -28,10 +30,45 @@ class TransactionRepositoryImpl(
         limitAmount: Double
     ) = Either.runSuspendWithCatchError(listOf(remoteExceptionInterceptor)) {
         val transactionsListResponse = transactionApiService.getTransactionList()
+        //filter offline
+        val transactions = transactionListMapper.map(
+            transactionsListResponse
+        ).transactions
+        val resultFilterByType =
+            when (type) {
+                "Expenses" -> {
+                    transactions.filter { transaction ->
+                        (transaction.value < 0 && abs(
+                            transaction.value
+                        ) < limitAmount)
+                    }
+                }
+                "Revenue" -> {
+                    transactions.filter { transaction ->
+                        (transaction.value >= 0 && abs(
+                            transaction.value
+                        ) < limitAmount)
+                    }
+                }
+                else -> {
+                    transactions.filter { transaction -> abs(transaction.value) < limitAmount }
+                }
+            }
+        // filter by tag
+        var resultFilterByTag: MutableList<TransactionListEntity.Transaction> = mutableListOf()
+        if (tags.isNotEmpty()) {
+            tags.forEach {
+                resultFilterByTag.addAll(transactions.filter { transaction ->
+                    transaction.tags.contains(
+                        it
+                    )
+                })
+            }
+        } else {
+            resultFilterByTag = resultFilterByType.toMutableList()
+        }
         return@runSuspendWithCatchError Either.Success(
-            transactionListMapper.map(
-                transactionsListResponse
-            )
+            TransactionListEntity(transactions = resultFilterByTag)
         )
     }
 
@@ -63,6 +100,10 @@ class TransactionRepositoryImpl(
     override suspend fun getAccountInfo(): Either<Failure, List<AccountEntity>> =
         Either.runSuspendWithCatchError(listOf(remoteExceptionInterceptor)) {
             val accountInfoResponse = transactionApiService.getAccountInfo()
-            return@runSuspendWithCatchError Either.Success(accountInfoMapper.mapList(accountInfoResponse?.feed?.accounts))
+            return@runSuspendWithCatchError Either.Success(
+                accountInfoMapper.mapList(
+                    accountInfoResponse?.feed?.accounts
+                )
+            )
         }
 }
