@@ -10,7 +10,8 @@ interface TransactionRepository {
     suspend fun getTransactions(
         tags: List<String>,
         type: String,
-        limitAmount: Double
+        limitAmount: Double,
+        accountID : String
     ): Either<Failure, TransactionListEntity>
 
     suspend fun createTransaction(

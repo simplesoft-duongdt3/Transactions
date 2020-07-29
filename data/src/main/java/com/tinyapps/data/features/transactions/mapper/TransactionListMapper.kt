@@ -13,15 +13,15 @@ import com.tinyapps.domain.features.transactions.models.TransactionListEntity
 class TransactionListMapper : Mapper<TransactionListResponse?,TransactionListEntity>() {
     override fun map(input: TransactionListResponse?): TransactionListEntity {
         Log.d("TransactionListMapper","from $input")
-        val transactions = input?.feed?.transactions?.filterNotNull().defaultEmpty().filter { transaction -> transaction.name.value.isEmpty().not() }.mapIndexed { index, transaction ->
+        val transactions = input?.feed?.transactions?.filterNotNull().defaultEmpty().filter { transaction -> transaction.name?.value.defaultEmpty().isEmpty().not() }.mapIndexed { index, transaction ->
             Log.d("TransactionListMapper","process $transaction")
             TransactionListEntity.Transaction(
                 id = "",
-                date = transaction.date.value.toDateLong(),
-                description = transaction.description.value,
-                name = transaction.name.value,
-                tags = transaction.tags.value.toListTags(),
-                value = transaction.value.value.toDouble().defaultZero()
+                date = transaction.date?.value?.toDateLong().defaultZero(),
+                description = transaction.description?.value.defaultEmpty(),
+                name = transaction.name?.value.defaultEmpty(),
+                tags = transaction.tags?.value?.toListTags().defaultEmpty(),
+                value = transaction.value?.value?.toDouble().defaultZero()
             )
         }
 

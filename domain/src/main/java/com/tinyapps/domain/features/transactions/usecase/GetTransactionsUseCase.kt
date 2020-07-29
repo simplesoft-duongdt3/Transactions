@@ -13,7 +13,8 @@ class GetTransactionsUseCase(private val transactionRepository: TransactionRepos
         return transactionRepository.getTransactions(
             tags = params.tags,
             type = params.type,
-            limitAmount = params.limitAmount
+            limitAmount = params.limitAmount,
+            accountID = "1"
         )
     }
 }

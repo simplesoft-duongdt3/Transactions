@@ -15,17 +15,19 @@ data class Feed(
 
 data class Transaction(
     @SerializedName("gsx\$name")
-    val name: GsxName,
+    val name: GsxName?,
     @SerializedName("gsx\$dấuthờigian")
-    val date: GsxName,
+    val date: GsxName?,
     @SerializedName("gsx\$amount")
-    val value: GsxName,
+    val value: GsxName?,
     @SerializedName("gsx\$description")
-    val description: GsxName,
+    val description: GsxName?,
     @SerializedName("gsx\$tags")
-    val tags: GsxName,
+    val tags: GsxName?,
     @SerializedName("gsx\$total")
-    val total: GsxName
+    val total: GsxName?,
+    @SerializedName("gsx\$accountid")
+    val accountID: GsxName?
 )
 
 data class GsxName (
