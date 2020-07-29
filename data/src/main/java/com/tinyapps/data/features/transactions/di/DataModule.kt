@@ -5,6 +5,7 @@ import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.chuckerteam.chucker.api.RetentionManager
 import com.tinyapps.data.features.transactions.exception_interceptor.RemoteExceptionInterceptor
 import com.tinyapps.data.features.transactions.mapper.AccountInfoMapper
+import com.tinyapps.data.features.transactions.mapper.TransactionListFilter
 import com.tinyapps.data.features.transactions.mapper.TransactionListMapper
 import com.tinyapps.data.features.transactions.repository.TransactionRepositoryImpl
 import com.tinyapps.data.features.transactions.services.CreateTransactionApiService
@@ -23,6 +24,9 @@ val dataModule = module {
 
     factory {
         TransactionListMapper()
+    }
+    factory {
+        TransactionListFilter(transactionListMapper = get())
     }
     factory {
         AccountInfoMapper()
@@ -73,8 +77,8 @@ val dataModule = module {
             transactionApiService = get(),
             createTransactionApiService = get(),
             remoteExceptionInterceptor = get(),
-            transactionListMapper = get(),
-            accountInfoMapper = get()
+            accountInfoMapper = get(),
+            transactionListFilter = get()
         )
     }
     single { RemoteExceptionInterceptor() }

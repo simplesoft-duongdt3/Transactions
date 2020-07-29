@@ -7,68 +7,40 @@ import com.tinyapps.common_jvm.exception.Failure
 import com.tinyapps.common_jvm.functional.Either
 import com.tinyapps.data.features.transactions.exception_interceptor.RemoteExceptionInterceptor
 import com.tinyapps.data.features.transactions.mapper.AccountInfoMapper
-import com.tinyapps.data.features.transactions.mapper.TransactionListMapper
+import com.tinyapps.data.features.transactions.mapper.TransactionListFilter
+import com.tinyapps.data.features.transactions.models.TransactionListResponseWithFilter
 import com.tinyapps.data.features.transactions.services.CreateTransactionApiService
 import com.tinyapps.data.features.transactions.services.TransactionApiService
 import com.tinyapps.domain.features.transactions.models.AccountEntity
-import com.tinyapps.domain.features.transactions.models.TransactionListEntity
 import com.tinyapps.domain.features.transactions.repository.TransactionRepository
 import java.util.*
-import kotlin.math.abs
 
 class TransactionRepositoryImpl(
     private val transactionApiService: TransactionApiService,
     private val createTransactionApiService: CreateTransactionApiService,
     private val remoteExceptionInterceptor: RemoteExceptionInterceptor,
-    private val transactionListMapper: TransactionListMapper,
+    private val transactionListFilter: TransactionListFilter,
     private val accountInfoMapper: AccountInfoMapper
 ) : TransactionRepository {
 
     override suspend fun getTransactions(
         tags: List<String>,
         type: String,
-        limitAmount: Double
+        limitAmount: Double,
+        accountID: String
     ) = Either.runSuspendWithCatchError(listOf(remoteExceptionInterceptor)) {
         val transactionsListResponse = transactionApiService.getTransactionList()
         //filter offline
-        val transactions = transactionListMapper.map(
-            transactionsListResponse
-        ).transactions
-        val resultFilterByType =
-            when (type) {
-                "Expenses" -> {
-                    transactions.filter { transaction ->
-                        (transaction.value < 0 && abs(
-                            transaction.value
-                        ) < limitAmount)
-                    }
-                }
-                "Revenue" -> {
-                    transactions.filter { transaction ->
-                        (transaction.value >= 0 && abs(
-                            transaction.value
-                        ) < limitAmount)
-                    }
-                }
-                else -> {
-                    transactions.filter { transaction -> abs(transaction.value) < limitAmount }
-                }
-            }
-        // filter by tag
-        var resultFilterByTag: MutableList<TransactionListEntity.Transaction> = mutableListOf()
-        if (tags.isNotEmpty()) {
-            tags.forEach {
-                resultFilterByTag.addAll(transactions.filter { transaction ->
-                    transaction.tags.contains(
-                        it
-                    )
-                })
-            }
-        } else {
-            resultFilterByTag = resultFilterByType.toMutableList()
+        val transactionsWithFilter = transactionsListResponse?.let {
+            TransactionListResponseWithFilter(
+                response = it,
+                type = type,
+                tags = tags,
+                limitAmount = limitAmount
+            )
         }
         return@runSuspendWithCatchError Either.Success(
-            TransactionListEntity(transactions = resultFilterByTag)
+            transactionListFilter.map(transactionsWithFilter)
         )
     }
 
