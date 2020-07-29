@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.Composable
-import androidx.compose.frames.modelListOf
 import androidx.compose.remember
 import androidx.compose.state
 import androidx.fragment.app.FragmentTransaction
@@ -144,7 +143,7 @@ class MainActivity : AppCompatActivity() {
                                                 amountState.value = amountFilterState.value
                                                 mTransactionViewModel.getTransactions(
                                                     type = typeState.selectedOption,
-                                                    tags = tagState.selectedOption,
+                                                    tags = tagState.selectedOption.toList(),
                                                     maxAmount = amountState.max
                                                 )
                                             }
@@ -191,7 +190,7 @@ class MainActivity : AppCompatActivity() {
     ) {
         mTransactionViewModel.getTransactions(
             type = typeState.selectedOption,
-            tags = tagState.selectedOption,
+            tags = tagState.selectedOption.toList(),
             maxAmount = amountState.value
                 ?: amountState.max
         )
