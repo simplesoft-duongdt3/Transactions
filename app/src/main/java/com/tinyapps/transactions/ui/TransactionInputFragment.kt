@@ -20,6 +20,7 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
+import com.tinyapps.common_jvm.extension.string.isChipEmpty
 import com.tinyapps.common_jvm.extension.string.moneyToDouble
 import com.tinyapps.common_jvm.extension.string.toDateLong
 import com.tinyapps.transactions.R
@@ -79,7 +80,7 @@ class TransactionInputFragment : DialogFragment() {
     }
 
     private fun handleChipInput(afterText: Editable?) {
-        if (!afterText.isNullOrEmpty() && afterText[afterText.lastIndex] == '\n') {
+        if (afterText!=null && !afterText.toString().isChipEmpty() && afterText[afterText.lastIndex] == '\n') {
             //enter trigger
             val chip = Chip(context)
             chip.text = afterText.toString()

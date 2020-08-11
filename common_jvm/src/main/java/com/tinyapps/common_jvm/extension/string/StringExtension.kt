@@ -39,3 +39,7 @@ fun String.moneyToDouble() : Double{
         0.0
     }
 }
+
+fun String.isChipEmpty() : Boolean{
+    return this.replace("\n","").isEmpty()
+}
