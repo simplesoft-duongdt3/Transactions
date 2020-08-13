@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.tinyapps.common_jvm.date.toDate
-import com.tinyapps.common_jvm.extension.nullable.defaultZero
 import com.tinyapps.domain.base.usecase.UseCaseParams
 import com.tinyapps.domain.features.transactions.usecase.*
 import com.tinyapps.presentation.mapper.TagListMapper
@@ -17,7 +16,6 @@ import com.tinyapps.presentation.mapper.AccountMapper
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.*
-import kotlin.math.abs
 
 class TransactionViewModel(
     val transactionsUseCase: GetTransactionsUseCase,
@@ -40,7 +38,8 @@ class TransactionViewModel(
                         date = transaction.date.toDate() ?: Date(),
                         amount = transaction.amount,
                         description = transaction.comment,
-                        name = transaction.name
+                        name = transaction.name,
+                        accountId = transaction.accountId
                     )
                 )
             }

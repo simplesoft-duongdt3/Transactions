@@ -16,7 +16,8 @@ class CreateTransactionUseCase(private val transactionRepository: TransactionRep
             tags = params.tags,
             description = params.description,
             amount = params.amount,
-            date = params.date
+            date = params.date,
+            accountID = params.accountId
         )
     }
 }
@@ -26,5 +27,6 @@ data class CreateTransactionUseCaseParams(
     val amount: Double,
     val description: String,
     val tags: List<String>,
-    val date: Date
+    val date: Date,
+    val accountId: String
 ) : UseCaseParams

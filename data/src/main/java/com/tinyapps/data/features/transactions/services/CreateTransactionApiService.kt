@@ -17,6 +17,8 @@ interface CreateTransactionApiService {
         @Field("entry.375385192_day") day: Int,
         @Field("entry.375385192_month") month: Int,
         @Field("entry.375385192_year") year: Int,
-        @Field("entry.1360259595") tags: String
+        @Field("entry.1360259595") tags: String,
+        @Field("entry.493660469") accountID: String
+
     ): ResponseBody
 }

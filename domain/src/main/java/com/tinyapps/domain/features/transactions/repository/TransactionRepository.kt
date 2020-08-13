@@ -19,7 +19,8 @@ interface TransactionRepository {
         amount: Double,
         description: String,
         tags: List<String>,
-        date: Date
+        date: Date,
+        accountID : String
     ): Either<Failure, Boolean>
 
     suspend fun getAccountInfo(

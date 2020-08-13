@@ -49,7 +49,8 @@ class TransactionRepositoryImpl(
         amount: Double,
         description: String,
         tags: List<String>,
-        date: Date
+        date: Date,
+        accountID: String
     ) = Either.runSuspendWithCatchError(listOf(remoteExceptionInterceptor)) {
         val stringTags = tags.map {
             it.trim()
@@ -64,7 +65,8 @@ class TransactionRepositoryImpl(
             day = date.day(),
             month = date.month(),
             year = date.year(),
-            tags = stringTags
+            tags = stringTags,
+            accountID = accountID
         )
         return@runSuspendWithCatchError Either.Success(true)
     }
