@@ -1,4 +1,4 @@
-package com.tinyapps.transactions
+package com.tinyapps.transactions.ui.transaction
 
 import android.os.Bundle
 import android.util.Log
@@ -31,7 +31,7 @@ import com.tinyapps.transactions.ui.listener.IFilter
 import com.tinyapps.transactions.ui.state.*
 import org.koin.androidx.viewmodel.ext.android.viewModel
 
-class MainActivity : AppCompatActivity() {
+class TransactionsActivity : AppCompatActivity() {
     private val backPressHandler =
         BackPressHandler(true)
 
@@ -144,7 +144,7 @@ class MainActivity : AppCompatActivity() {
                                                 mTransactionViewModel.getTransactions(
                                                     type = typeState.selectedOption,
                                                     tags = tagState.selectedOption.toList(),
-                                                    maxAmount = amountState.max
+                                                    maxAmount = amountState.value ?: amountState.max
                                                 )
                                             }
 

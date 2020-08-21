@@ -11,7 +11,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Transactions">
         <activity
-            android:name=".MainActivity"
+            android:name=".ui.transaction.TransactionsActivity"
             android:windowSoftInputMode="adjustPan"
             android:screenOrientation="portrait"
             android:label="@string/app_name"
